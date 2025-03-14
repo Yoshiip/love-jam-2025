@@ -8,7 +8,8 @@
   ],
   "diagnostics.globals": [
       "love",
-      "jit"
+      "jit",
+        "https"
   ],
 
   "workspace.checkThirdParty": false,

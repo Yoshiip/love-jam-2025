@@ -1,21 +1,22 @@
+---@diagnostic disable: duplicate-set-field
 https = nil
 local overlayStats = require("lib.overlayStats")
 local runtimeLoader = require("runtime.loader")
-local eyes = require("eyes.eyes")
+local gimmedrinks = require("gimmedrinks.gimmedrinks")
 
 function love.load()
   https = runtimeLoader.loadHTTPS()
-  eyes.load()
+  gimmedrinks.load()
   overlayStats.load() -- Should always be called last
 end
 
 function love.draw()
-  eyes.draw()
+  gimmedrinks.draw()
   overlayStats.draw() -- Should always be called last
 end
 
 function love.update(dt)
-  eyes.update(dt)
+  gimmedrinks.update(dt)
   overlayStats.update(dt) -- Should always be called last
 end
 
