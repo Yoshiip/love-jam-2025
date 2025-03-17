@@ -1,45 +1,220 @@
-local Drink = require('game.drinks.drink')
-local vector = require('gimmedrinks.utils.vector')
+local Slot = require('game.drinks.slot')
+local vector = require('Gimmedrinks.utils.vector')
+local ResourceManager = require('Gimmedrinks.utils.resource_manager')
+local DrinksData = require('Gimmedrinks.drinks_data')
+local Button = require('Gimmedrinks.ui.button')
+require "Gimmedrinks.utils.color"
+require "gimmedrinks.palette"
+local Phase = {
+  BUY = 1,
+  SIMULATION = 2,
+  END = 3
+}
 
-local gimmedrinks = {
+
+---@class GameData
+---@field drinks Drink[]
+---@field slots Slot[]
+---@field hoveredSlot Slot?
+---@field resources ResourceManager?
+GameData = {
+  slots = {},
   drinks = {},
+  phase = Phase.BUY,
+  level = 0,
+  score = 0,
+  combo = 0,
+  money = 10,
+  hoveredSlot = nil,
   resources = nil
 }
 
-local DRINKS_COUNT = 48
+---@type Button
+local startButton
+
+local SLOTS_COUNT = 32
 local GRID_WIDTH = 6
+local machineCanvasOffset = { x = 0, y = 0 }
 
-function gimmedrinks.load()
+MachineCanvas = love.graphics.newCanvas()
+
+function ScreenToMachineCanvas(x, y)
+  local vendingMachine = GameData.resources:getTexture('vendingMachine')
+  if vendingMachine == nil then
+    return 0, 0
+  end
+  return x - 311, y - 63
+end
+
+local function startSimulation()
+  GameData.phase = Phase.SIMULATION
+  GameData.drinks[#GameData.drinks].enabled = true
+end
+
+function LoadGame()
   local spacing = 100
-  for i = 0, DRINKS_COUNT, 1 do
-    local drink = Drink.new(i%GRID_WIDTH * spacing, math.floor(i/GRID_WIDTH) * spacing)
-    table.insert(gimmedrinks.drinks, drink)
+  MachineCanvas = love.graphics.newCanvas(128*6, 128*6*2)
+  GameData.resources = ResourceManager.new():loadAll()
+  GameData.resources:setDefaultFont('outfit')
+
+
+  print(#DrinksData)
+
+  local keys = {}
+  for key in pairs(DrinksData) do
+    table.insert(keys, key)
   end
+
+
+  for i = 0, SLOTS_COUNT do
+    local x, y = i % GRID_WIDTH * spacing, math.floor(i / GRID_WIDTH) * spacing * 2
+    local randomKey = keys[love.math.random(1, #keys)]
+    local slot = Slot.new(x, y, randomKey, 8)
+    table.insert(GameData.slots, slot)
+  end
+
+
+  startButton = Button.new(32, 32, 'Start', function ()
+    startSimulation()
+  end)
 end
 
-function gimmedrinks.draw()
+local baseWidth, baseHeight = 1280, 720
+
+
+local function drawBackground()
+  love.graphics.setColor(1.0, 1.0, 1.0)
+  local bg = GameData.resources:getTexture('background')
+  if bg == nil then
+    return
+  end
+
+  local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
+  local imgW, imgH = bg:getWidth(), bg:getHeight()
+  local scale = math.max(screenW / imgW, screenH / imgH)
+  local offsetX = (screenW - imgW * scale) / 2
+  local offsetY = (screenH - imgH * scale) / 2
+  love.graphics.draw(bg, offsetX, offsetY, 0, scale, scale)
+end
+
+local function drawVendingMachine()
+  local vendingMachine = GameData.resources:getTexture('vendingMachine')
+  if vendingMachine == nil then
+    return 0, 0
+  end
+  local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
+  local imgW, imgH = vendingMachine:getWidth(), vendingMachine:getHeight()
+  local scale = math.min(screenW / imgW, screenH / imgH) * 0.9
+  local offsetX = (screenW - imgW * scale) / 2
+  local offsetY = (screenH - imgH * scale) / 2
+  love.graphics.draw(vendingMachine, offsetX, offsetY, 0, 0.29629629629, 0.29629629629)
   love.graphics.setColor(1.0, 0.0, 0.0);
+  return offsetX, offsetY
+end
 
-  for _, drink in ipairs(gimmedrinks.drinks) do
-    drink:draw()
+local function drawInside(x, y)
+
+  love.graphics.setCanvas(MachineCanvas)
+  love.graphics.clear()
+  for _, slot in ipairs(GameData.slots) do
+    slot:draw()
+  end
+
+
+  table.sort(GameData.drinks, function(a, b)
+      return a.order > b.order
+  end)
+
+  for _, drink in ipairs(GameData.drinks) do
+      drink:draw()
   end
 
 end
 
-function gimmedrinks.update(dt)
-  for _, drink in ipairs(gimmedrinks.drinks) do
-    drink:update(dt)
-  end
-end
 
-function love.mousepressed(x, y, button)
-  for _, drink in ipairs(gimmedrinks.drinks) do
-    if vector.distance(x, y, drink.position.x, drink.position.y) < 30 then
-      drink.velocity.x = love.math.random(-10, 10)
-      drink.velocity.y = -10
-      drink.enabled = true
+---@param x number
+---@param y number
+local function drawTooltip(x, y)
+  if GameData.hoveredSlot then
+    if GameData.hoveredSlot.drinkId == nil then
+      return
+    end
+    love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.3))
+    love.graphics.rectangle("fill", x, y, 400, 300, 12, 12)
+    love.graphics.setColor(Palette.white)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle('line', x, y, 400, 300, 12, 12)
+    local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
+    love.graphics.print('HOVERED SLOT: ' .. drinkData.name, x + 48, y + 48)
+    if drinkData.sparkling then
+      love.graphics.print('Sparkling', x + 48, y + 72)
     end
   end
 end
 
-return gimmedrinks
+local function drawUI()
+
+  love.graphics.reset()
+  drawTooltip(love.mouse.getPosition())
+
+
+  love.graphics.print(GameData.money, 4, 4)
+
+
+  startButton:draw()
+
+end
+
+function DrawGame()
+  love.graphics.setBackgroundColor(HexToRGBA("#4D65B4"))
+  drawBackground()
+  local mx, my = drawVendingMachine()
+  drawInside(mx, my)
+  love.graphics.setCanvas()
+  love.graphics.draw(MachineCanvas, mx, my, 0, 0.5, 0.5)
+  drawUI()
+  love.graphics.setCanvas()
+
+end
+
+function UpdateGame(dt)
+  GameData.hoveredSlot = nil
+  for _, slot in ipairs(GameData.slots) do
+    slot:update(dt)
+    if slot:isHovered() then
+      GameData.hoveredSlot = slot
+    end
+  end
+
+  for _, drink in ipairs(GameData.drinks) do
+    drink:update(dt)
+  end
+
+
+  startButton:update()
+end
+
+
+function love.mousepressed(x, y, button)
+  if GameData.phase == Phase.BUY then
+    for _, slot in ipairs(GameData.slots) do
+      if slot:isHovered() then
+        print(slot.drinkId)
+        local drinkData = DrinksData[slot.drinkId]
+        if slot.stuck then
+          if GameData.money < drinkData.price then
+            -- TODO: Add message
+            return
+          end
+          GameData.money = GameData.money - drinkData.price
+          slot:unstuck()
+        else
+          GameData.money = GameData.money + drinkData.price
+          slot:startStuck()
+        end
+      end
+    end
+  elseif GameData.phase == Phase.SIMULATION then
+  elseif GameData.phase == Phase.END then
+  end
+end

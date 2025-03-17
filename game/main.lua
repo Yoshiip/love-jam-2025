@@ -2,21 +2,21 @@
 https = nil
 local overlayStats = require("lib.overlayStats")
 local runtimeLoader = require("runtime.loader")
-local gimmedrinks = require("gimmedrinks.gimmedrinks")
+require "gimmedrinks.gimmedrinks"
 
 function love.load()
   https = runtimeLoader.loadHTTPS()
-  gimmedrinks.load()
+  LoadGame()
   overlayStats.load() -- Should always be called last
 end
 
 function love.draw()
-  gimmedrinks.draw()
+  DrawGame()
   overlayStats.draw() -- Should always be called last
 end
 
 function love.update(dt)
-  gimmedrinks.update(dt)
+  UpdateGame(dt)
   overlayStats.update(dt) -- Should always be called last
 end
 
