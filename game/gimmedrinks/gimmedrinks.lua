@@ -7,7 +7,8 @@ require "Gimmedrinks.utils.color"
 require "gimmedrinks.palette"
 local Phase = {
   BUY = 1,
-  SIMULATION = 2,
+  SELECT_DRINK = 2,
+  SIMULATION = 3,
   END = 3
 }
 
@@ -46,19 +47,11 @@ function ScreenToMachineCanvas(x, y)
   return x - 311, y - 63
 end
 
-local function startSimulation()
-  GameData.phase = Phase.SIMULATION
-  GameData.drinks[#GameData.drinks].enabled = true
-end
-
 function LoadGame()
-  local spacing = 100
-  MachineCanvas = love.graphics.newCanvas(128*6, 128*6*2)
+  local spacing = 128
+  MachineCanvas = love.graphics.newCanvas(128 * 6, 128 * 6 * 2)
   GameData.resources = ResourceManager.new():loadAll()
   GameData.resources:setDefaultFont('outfit')
-
-
-  print(#DrinksData)
 
   local keys = {}
   for key in pairs(DrinksData) do
@@ -69,18 +62,15 @@ function LoadGame()
   for i = 0, SLOTS_COUNT do
     local x, y = i % GRID_WIDTH * spacing, math.floor(i / GRID_WIDTH) * spacing * 2
     local randomKey = keys[love.math.random(1, #keys)]
-    local slot = Slot.new(x, y, randomKey, 8)
+    local slot = Slot.new(x, y, randomKey, 8, 128, 256)
     table.insert(GameData.slots, slot)
   end
 
 
-  startButton = Button.new(32, 32, 'Start', function ()
-    startSimulation()
+  startButton = Button.new(32, 32, 'Start', function()
+    GameData.phase = Phase.SELECT_DRINK
   end)
 end
-
-local baseWidth, baseHeight = 1280, 720
-
 
 local function drawBackground()
   love.graphics.setColor(1.0, 1.0, 1.0)
@@ -113,7 +103,6 @@ local function drawVendingMachine()
 end
 
 local function drawInside(x, y)
-
   love.graphics.setCanvas(MachineCanvas)
   love.graphics.clear()
   for _, slot in ipairs(GameData.slots) do
@@ -122,13 +111,12 @@ local function drawInside(x, y)
 
 
   table.sort(GameData.drinks, function(a, b)
-      return a.order > b.order
+    return a.order > b.order
   end)
 
   for _, drink in ipairs(GameData.drinks) do
-      drink:draw()
+    drink:draw()
   end
-
 end
 
 
@@ -153,16 +141,19 @@ local function drawTooltip(x, y)
 end
 
 local function drawUI()
-
   love.graphics.reset()
   drawTooltip(love.mouse.getPosition())
 
+  if GameData.phase == Phase.SELECT_DRINK then
+    love.graphics.print('Select a drink...', 200, 300)
+  end
+
 
   love.graphics.print(GameData.money, 4, 4)
+  love.graphics.print(GameData.score, 4, 32)
 
 
   startButton:draw()
-
 end
 
 function DrawGame()
@@ -171,10 +162,9 @@ function DrawGame()
   local mx, my = drawVendingMachine()
   drawInside(mx, my)
   love.graphics.setCanvas()
-  love.graphics.draw(MachineCanvas, mx, my, 0, 0.5, 0.5)
+  love.graphics.draw(MachineCanvas, mx, my, 0)
   drawUI()
   love.graphics.setCanvas()
-
 end
 
 function UpdateGame(dt)
@@ -194,27 +184,49 @@ function UpdateGame(dt)
   startButton:update()
 end
 
-
 function love.mousepressed(x, y, button)
   if GameData.phase == Phase.BUY then
     for _, slot in ipairs(GameData.slots) do
       if slot:isHovered() then
-        print(slot.drinkId)
         local drinkData = DrinksData[slot.drinkId]
         if slot.stuck then
+          GameData.money = GameData.money + drinkData.price
+          slot:unstuck()
+        else
           if GameData.money < drinkData.price then
             -- TODO: Add message
             return
           end
           GameData.money = GameData.money - drinkData.price
-          slot:unstuck()
-        else
-          GameData.money = GameData.money + drinkData.price
           slot:startStuck()
         end
       end
     end
-  elseif GameData.phase == Phase.SIMULATION then
+  elseif GameData.phase == Phase.SELECT_DRINK then
+    for _, slot in ipairs(GameData.slots) do
+      if slot:isHovered() then
+        local drinkData = DrinksData[slot.drinkId]
+        if not slot.stuck then
+          slot.drinks[1].enabled = true
+          GameData.phase = Phase.SIMULATION
+        end
+      end
+    end
   elseif GameData.phase == Phase.END then
+    print("Fini!")
   end
+end
+
+--- get index of item in list
+---@generic T
+---@param array T[]
+---@param value T
+---@return integer|nil
+function IndexOf(array, value)
+  for i, v in ipairs(array) do
+    if v == value then
+      return i
+    end
+  end
+  return nil
 end

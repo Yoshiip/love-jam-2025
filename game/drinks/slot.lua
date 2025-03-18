@@ -14,11 +14,11 @@ local Slot = {
 Slot.__index = Slot
 
 
-function Slot.new(x, y, drinkId, count)
+function Slot.new(x, y, drinkId, count, width, height)
   local self = setmetatable({}, Slot)
   self.drinks = {}
   self.position = { x = x, y = y }
-  self.size = { x = 48, y = 24}
+  self.size = { x = width, y = height}
   self.drinkId = drinkId
   self.count = count
 
@@ -50,6 +50,12 @@ function Slot:draw()
   love.graphics.rectangle("fill", x, y, 32, 32)
   love.graphics.setColor(Palette.darkPurpleBlack)
   love.graphics.print(self.count, x, y)
+
+  love.graphics.setColor(Palette.royalBlue)
+  love.graphics.setLineWidth(3)
+
+  love.graphics.rectangle("line", x, y, self.size.x, self.size.y)
+  love.graphics.setColor(Palette.white)
 end
 
 function Slot:isHovered()
