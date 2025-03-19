@@ -1,4 +1,3 @@
-
 ---@class Button
 ---@field gText? love.Text
 ---@field onClick function?
@@ -18,7 +17,7 @@ function Button.new(x, y, text, onClickCallback)
   self.position = { x = x, y = y }
   self.text = text
   self.onClick = onClickCallback or function() end
-  local font = GameData.resources:getFont('outfit')
+  local font = GameData.resources:getFont('outfit_medium')
   if font == nil then
     return
   end
@@ -37,7 +36,7 @@ function Button:draw()
     love.graphics.setColor(Palette.white)
   end
 
-  love.graphics.rectangle("fill", x, y, self.gText:getWidth(), self.gText:getHeight())
+  love.graphics.rectangle("fill", x, y, self.gText:getWidth(), self.gText:getHeight(), 4, 4)
   love.graphics.setColor(Palette.darkPurpleBlack)
   love.graphics.draw(self.gText, x, y)
 end

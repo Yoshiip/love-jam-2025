@@ -19,10 +19,23 @@ local RESOURCE_PATHS = {
 
   },
   fonts = {
-    outfit = {
-      path = 'Gimmedrinks/fonts/Outfit-VariableFont_wght.ttf',
+    outfit_title_bold = {
+      path = 'Gimmedrinks/fonts/outfit_bold.ttf',
+      size = 48,
+    },
+    outfit_bold = {
+      path = 'Gimmedrinks/fonts/outfit_bold.ttf',
       size = 32,
     },
+    outfit_medium = {
+      path = 'Gimmedrinks/fonts/outfit_medium.ttf',
+      size = 32,
+    },
+    outfit_regular = {
+      path = 'Gimmedrinks/fonts/outfit_regular.ttf',
+      size = 32,
+    },
+
   }
 }
 
@@ -43,7 +56,7 @@ end
 ---@return love.Image|nil texture The loaded texture or nil if loading failed
 local function loadTexture(name, path)
   local success, result = pcall(function()
-      return love.graphics.newImage(path)
+    return love.graphics.newImage(path)
   end)
 
   if success then
@@ -55,13 +68,13 @@ local function loadTexture(name, path)
 end
 
 function ResourceManager:loadTextures()
-    local textures = {}
-    for name, path in pairs(RESOURCE_PATHS.textures) do
-      textures[name] = loadTexture(name, path)
-    end
+  local textures = {}
+  for name, path in pairs(RESOURCE_PATHS.textures) do
+    textures[name] = loadTexture(name, path)
+  end
 
-    self.resources.textures = textures
-    return textures
+  self.resources.textures = textures
+  return textures
 end
 
 ---Loads all fonts defined in RESOURCE_PATHS.fonts
