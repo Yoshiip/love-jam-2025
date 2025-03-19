@@ -6,6 +6,7 @@ local Slot = {
   position = { x = 0, y = 0 },
   size = { x = 0, y = 0 },
   stuck = false,
+  hovered = false,
   drinkId = '',
   count = 0,
 }
@@ -18,7 +19,7 @@ function Slot.new(x, y, drinkId, count, width, height)
   local self = setmetatable({}, Slot)
   self.drinks = {}
   self.position = { x = x, y = y }
-  self.size = { x = width, y = height}
+  self.size = { x = width, y = height }
   self.drinkId = drinkId
   self.count = count
 
@@ -26,7 +27,7 @@ function Slot.new(x, y, drinkId, count, width, height)
   local spacing = 12
 
   for i = 0, count, 1 do
-    local drink = Drink.new(x, y - i*spacing, drinkId)
+    local drink = Drink.new(x, y - i * spacing, drinkId)
     drink.order = i
     drink.slot = self
     table.insert(GameData.drinks, drink)
@@ -39,11 +40,15 @@ function Slot:update(dt)
 end
 
 function Slot:draw()
-  love.graphics.setColor(1, 1, 1, 1)
   local x, y = self.position.x, self.position.y
   local slotTexture = GameData.resources:getTexture('slot')
   if slotTexture == nil then
     return
+  end
+  if self.hovered then
+    love.graphics.setColor(1, 1, 1, 1)
+  else
+    love.graphics.setColor(1, 0.5, 1, 1)
   end
   love.graphics.draw(slotTexture, x, y)
   love.graphics.setColor(Palette.paleMint)
@@ -66,9 +71,10 @@ function Slot:isHovered()
   local inside_x = cx >= px and cx <= px + sx
   local inside_y = cy >= py and cy <= py + sy
 
-  return inside_x and inside_y
+  local hovered = inside_x and inside_y
+  self.hovered = hovered
+  return hovered
 end
-
 
 function Slot:startStuck()
   self.stuck = true

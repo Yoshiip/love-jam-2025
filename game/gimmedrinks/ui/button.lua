@@ -3,6 +3,7 @@
 ---@field onClick function?
 local Button = {
   position = { x = 0, y = 0 },
+  size = { x = 0, y = 0 },
   hovered = false,
   pressed = false,
   onClick = nil,
@@ -15,14 +16,18 @@ Button.__index = Button
 function Button.new(x, y, text, onClickCallback)
   local self = setmetatable({}, Button)
   self.position = { x = x, y = y }
-  self.text = text
   self.onClick = onClickCallback or function() end
   local font = GameData.resources:getFont('outfit_medium')
   if font == nil then
     return
   end
+  self.text = text
   love.graphics.setFont(font)
   self.gText = love.graphics.newText(font, text)
+  self.size = {
+    x = self.gText:getWidth() + 8,
+    y = self.gText:getHeight() + 8
+  }
   return self
 end
 
@@ -36,9 +41,13 @@ function Button:draw()
     love.graphics.setColor(Palette.white)
   end
 
-  love.graphics.rectangle("fill", x, y, self.gText:getWidth(), self.gText:getHeight(), 4, 4)
-  love.graphics.setColor(Palette.darkPurpleBlack)
-  love.graphics.draw(self.gText, x, y)
+  love.graphics.rectangle("fill", x, y, self.size.x, self.size.y, 4, 4)
+  if self.hovered then
+    love.graphics.setColor(Palette.cornflowerBlue)
+  else
+    love.graphics.setColor(Palette.darkPurpleBlack)
+  end
+  love.graphics.draw(self.gText, x + 4, y + 4)
 end
 
 function Button:update()

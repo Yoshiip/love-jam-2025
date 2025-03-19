@@ -12,22 +12,26 @@ Phase = {
 ---@field drinks Drink[]
 ---@field slots Slot[]
 ---@field hoveredSlot Slot?
+---@field mainDrink Drink?
 ---@field resources ResourceManager?
 GameData = {
   slots = {},
   drinks = {},
   phase = Phase.BUY,
   level = 0,
+  objective = 100,
   score = 0,
   combo = 0,
-  money = 10,
+  money = 0,
   hoveredSlot = nil,
+  mainDrink = nil,
   resources = nil
 }
 
 local ResourceManager = require('Gimmedrinks.utils.resource_manager')
 local MenuScene = require "game.scenes.menu_scene"
 local GameScene = require "game.scenes.game_scene"
+local ResultsScene = require "game.scenes.results_scene"
 local EndScene = require "game.scenes.end_scene"
 
 local CurrentScreen = 1
@@ -43,32 +47,26 @@ Screens = {
 local Scenes = {
   MenuScene:new(),
   GameScene:new(),
+  ResultsScene:new(),
   EndScene:new()
 }
 
 
 
-local function getScene()
+---@return Scene | GameScene
+function GetScene()
   return Scenes[CurrentScreen]
 end
-
-
 
 ---@param scene_id number
 function ChangeScene(scene_id)
   CurrentScreen = scene_id
-  getScene():start()
+  GetScene():start()
 end
 
 MachineCanvas = love.graphics.newCanvas()
 
-function ScreenToMachineCanvas(x, y)
-  local vendingMachine = GameData.resources:getTexture('vendingMachine')
-  if vendingMachine == nil then
-    return 0, 0
-  end
-  return x - 311, y - 63
-end
+
 
 function LoadGame()
   GameData.resources = ResourceManager.new():loadAll()
@@ -94,11 +92,11 @@ function DrawGame()
   love.graphics.setBackgroundColor(HexToRGBA("#4D65B4"))
   drawBackground()
 
-  getScene():draw()
+  GetScene():draw()
 end
 
 function UpdateGame(dt)
-  getScene():update(dt)
+  GetScene():update(dt)
 end
 
 --- get index of item in list
@@ -116,9 +114,9 @@ function IndexOf(array, value)
 end
 
 function love.mousereleased(x, y, button)
-  getScene():mousereleased(x, y, button)
+  GetScene():mousereleased(x, y, button)
 end
 
 function love.mousepressed(x, y, button)
-  getScene():mousepressed(x, y, button)
+  GetScene():mousepressed(x, y, button)
 end
