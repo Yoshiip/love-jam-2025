@@ -4,15 +4,23 @@
 local ResourceManager = {}
 ResourceManager.__index = ResourceManager
 
+---@alias FontName
+---| '"outfit_title_bold"'
+---| '"outfit_bold"'
+---| '"outfit_medium"'
+---| '"outfit_regular"'
+---| '"lcd"'
 
 local RESOURCE_PATHS = {
   textures = {
     background = 'Gimmedrinks/images/background.jpg',
     vendingMachine = 'Gimmedrinks/images/vending_machine.png',
+    pushDecoration = 'Gimmedrinks/images/push_decoration.png',
     slot = 'Gimmedrinks/images/slot.png',
     -- DRINKS
     drinkWater = 'Gimmedrinks/images/drinks/drink.png',
     orangeSoda = 'Gimmedrinks/images/drinks/drink.png',
+    mintWater = 'Gimmedrinks/images/drinks/drink.png',
     orangeWater = 'Gimmedrinks/images/drinks/drink.png',
     sparklingWater = 'Gimmedrinks/images/drinks/drink.png',
     stillWater = 'Gimmedrinks/images/drinks/drink.png',
@@ -35,6 +43,10 @@ local RESOURCE_PATHS = {
       path = 'Gimmedrinks/fonts/outfit_regular.ttf',
       size = 32,
     },
+    lcd = {
+      path = 'Gimmedrinks/fonts/lcd.otf',
+      size = 32,
+    }
 
   }
 }
@@ -113,14 +125,14 @@ function ResourceManager:getTexture(name)
 end
 
 ---Gets a loaded font resource by name
----@param name string Name of the font
+---@param name FontName Name of the font
 ---@return love.Font|nil font The requested font or nil if not found
 function ResourceManager:getFont(name)
   return self.resources.fonts[name]
 end
 
 ---Sets the default font to the specified font
----@param name string Name of the font to set as default
+---@param name FontName Name of the font to set as default
 function ResourceManager:setDefaultFont(name)
   local font = self:getFont(name)
   if font then

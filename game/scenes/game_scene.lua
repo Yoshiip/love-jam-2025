@@ -4,19 +4,27 @@ local Button = require('game.gimmedrinks.ui.button')
 local Scene = require("game.scenes.scene")
 
 ---@class GameScene: Scene
-local GameScene = {}
+local GameScene = {
+  totalDrinks = 0,
+  drinksFalled = 0,
+}
 GameScene.__index = GameScene
 setmetatable(GameScene, { __index = Scene })
 
-
 local SLOT_DEFAULT_SIZE = { x = 128, y = 256 }
-MachineInnerSize = { x = 0, y = 0 }
 local MACHINE_CANVAS_SIZE = { x = 600, y = 600 }
+MachineInnerSize = { x = 0, y = 0 }
+local VendingMachinePadding = { left = 32, top = 32, right = 200, bottom = 128 }
+local VendingMachineOffset = { x = 0, y = 0 }
 
 function ScreenToMachineCanvas(x, y)
-  x = x * MachineInnerSize.x / MACHINE_CANVAS_SIZE.x
-  y = y * MachineInnerSize.y / MACHINE_CANVAS_SIZE.y
-  return x - 312, y - 36
+  local minScale = math.min(
+    MACHINE_CANVAS_SIZE.x / MachineInnerSize.x,
+    MACHINE_CANVAS_SIZE.y / MachineInnerSize.y
+  )
+  x = (x - VendingMachineOffset.x - VendingMachinePadding.left) / minScale
+  y = (y - VendingMachineOffset.y - VendingMachinePadding.top) / minScale
+  return x, y
 end
 
 ---@type Button|nil
@@ -35,9 +43,19 @@ function GameScene:start()
   self:restart()
 end
 
+local function calculateVendingMachineOffset()
+  local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
+  local w, h = MACHINE_CANVAS_SIZE.x + VendingMachinePadding.left + VendingMachinePadding.right,
+      MACHINE_CANVAS_SIZE.y + VendingMachinePadding.top + VendingMachinePadding
+      .bottom
+  local scale = math.min(screenW / w, screenH / h) * 0.9
+  VendingMachineOffset.x = (screenW - w * scale) / 2
+  VendingMachineOffset.y = (screenH - h * scale) / 2
+end
+
 ---@param rows number
 ---@param cols number
-local function fillMachine(rows, cols)
+function GameScene:fillMachine(rows, cols)
   MachineInnerSize = {
     x = rows * SLOT_DEFAULT_SIZE.x,
     y = cols * SLOT_DEFAULT_SIZE.y
@@ -50,17 +68,26 @@ local function fillMachine(rows, cols)
   end
 
 
-  for i = 0, rows * cols do
-    local x = i % rows * SLOT_DEFAULT_SIZE.x
-    local y = math.floor(i / rows) * SLOT_DEFAULT_SIZE.y
-    local randomKey = keys[love.math.random(1, #keys)]
-    local slot = Slot.new(x, y, randomKey, 8, SLOT_DEFAULT_SIZE.x, SLOT_DEFAULT_SIZE.y)
-    table.insert(GameData.slots, slot)
+  for rx = 0, rows do
+    for ry = 0, cols, 1 do
+      local x = rx * SLOT_DEFAULT_SIZE.x
+      local y = ry * SLOT_DEFAULT_SIZE.y
+      if ry % 2 == 1 then
+        x = x + SLOT_DEFAULT_SIZE.x / 2
+      end
+      local randomKey = keys[love.math.random(1, #keys)]
+      local drinksCount = love.math.random(3, 5)
+      self.totalDrinks = self.totalDrinks + 1
+      local slot = Slot.new(x, y, randomKey, drinksCount, SLOT_DEFAULT_SIZE.x, SLOT_DEFAULT_SIZE.y)
+      table.insert(GameData.slots, slot)
+    end
   end
+
+  calculateVendingMachineOffset()
 end
 
 function GameScene:restart()
-  fillMachine(6, 8)
+  self:fillMachine(8, 6)
 
 
   startButton = Button.new(32, 32, 'Start', function()
@@ -81,24 +108,43 @@ function GameScene:update(dt)
     drink:update(dt)
   end
 
-  if startButton then
+  if GameData.phase == Phase.BUY and startButton then
     startButton:update()
   end
 end
 
+---@param x number
+---@param y number
+local function drawLCDScreen(x, y)
+  GameData.resources:setDefaultFont('lcd')
+
+  love.graphics.setColor(Palette.darkTeal)
+  love.graphics.rectangle("fill", x, y, 200, 60, 4, 4)
+  love.graphics.setColor(Palette.limeGreen)
+  love.graphics.print('Level 1', x + 16, y + 16)
+end
+
+
+
+
+
+
 local function drawVendingMachine()
-  local vendingMachine = GameData.resources:getTexture('vendingMachine')
-  if vendingMachine == nil then
-    return 0, 0
+  local w, h = MACHINE_CANVAS_SIZE.x + VendingMachinePadding.left + VendingMachinePadding.right,
+      MACHINE_CANVAS_SIZE.y + VendingMachinePadding.top + VendingMachinePadding
+      .bottom
+  local x, y = VendingMachineOffset.x, VendingMachineOffset.y
+  love.graphics.setColor(Palette.plumGray)
+  love.graphics.rectangle("fill", x, y, w, h, 12, 12)
+  drawLCDScreen(x + MACHINE_CANVAS_SIZE.x, y + VendingMachinePadding.top)
+
+  love.graphics.setColor(1.0, 1.0, 1.0)
+  local pushDecoration = GameData.resources:getTexture('pushDecoration')
+  if pushDecoration then
+    love.graphics.draw(pushDecoration, x, y + MACHINE_CANVAS_SIZE.y + 32)
   end
-  local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
-  local imgW, imgH = vendingMachine:getWidth(), vendingMachine:getHeight()
-  local scale = math.min(screenW / imgW, screenH / imgH) * 0.9
-  local offsetX = (screenW - imgW * scale) / 2
-  local offsetY = (screenH - imgH * scale) / 2
-  love.graphics.draw(vendingMachine, offsetX, offsetY, 0, 0.2, 0.2)
-  love.graphics.setColor(1.0, 0.0, 0.0);
-  return offsetX, offsetY
+
+  return x + VendingMachinePadding.left, y + VendingMachinePadding.top
 end
 
 local function drawInside(x, y)
@@ -116,7 +162,13 @@ local function drawInside(x, y)
   for _, drink in ipairs(GameData.drinks) do
     drink:draw()
   end
+
+  for _, slot in ipairs(GameData.slots) do
+    slot:drawLabel()
+  end
 end
+
+local TOOLTIP_SIZE = { x = 240, y = 120 }
 
 
 ---@param x number
@@ -126,22 +178,24 @@ local function drawTooltip(x, y)
     if GameData.hoveredSlot.drinkId == nil then
       return
     end
+    GameData.resources:setDefaultFont("outfit_regular")
     love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.3))
-    love.graphics.rectangle("fill", x, y, 400, 200, 12, 12)
+    love.graphics.rectangle("fill", x, y, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     love.graphics.setColor(Palette.white)
     love.graphics.setLineWidth(2)
-    love.graphics.rectangle('line', x, y, 400, 200, 12, 12)
+    love.graphics.rectangle('line', x, y, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
-    love.graphics.print('HOVERED SLOT: ' .. drinkData.name, x + 48, y + 48)
-    love.graphics.print('Drinks left: ' .. #GameData.hoveredSlot.drinks, x + 48, y + 96)
+    love.graphics.print(drinkData.name, x + 16, y + 16)
+    love.graphics.print('x' .. #GameData.hoveredSlot.drinks, x + 16, y + 64)
     if drinkData.sparkling then
-      love.graphics.print('Sparkling', x + 48, y + 144)
+      love.graphics.print('Sparkling', x + 16, y + 96)
     end
   end
 end
 
 local function drawUI()
-  drawTooltip(love.mouse.getPosition())
+  local mx, my = love.mouse.getPosition()
+  drawTooltip(mx + 12, my + 12)
 
   if GameData.phase == Phase.SELECT_DRINK then
     love.graphics.print('Select a drink...', 200, 300)
@@ -158,19 +212,24 @@ local function drawUI()
   end
 
 
-  if startButton then
+
+
+  if GameData.phase == Phase.BUY and startButton then
     startButton:draw()
   end
 end
+
 
 
 function GameScene:draw()
   local mx, my = drawVendingMachine()
   drawInside(mx, my)
   love.graphics.setCanvas()
-  love.graphics.draw(MachineCanvas, mx, my, 0,
+  local minScale = math.min(
     MACHINE_CANVAS_SIZE.x / MachineInnerSize.x,
     MACHINE_CANVAS_SIZE.y / MachineInnerSize.y)
+  love.graphics.draw(MachineCanvas, mx, my, 0,
+    minScale, minScale)
   drawUI()
   love.graphics.setCanvas()
 end

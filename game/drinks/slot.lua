@@ -27,7 +27,7 @@ function Slot.new(x, y, drinkId, count, width, height)
   local spacing = 12
 
   for i = 0, count, 1 do
-    local drink = Drink.new(x, y - i * spacing, drinkId)
+    local drink = Drink.new(x + 32, y - i * spacing + 48, drinkId)
     drink.order = i
     drink.slot = self
     table.insert(GameData.drinks, drink)
@@ -45,21 +45,22 @@ function Slot:draw()
   if slotTexture == nil then
     return
   end
-  if self.hovered then
-    love.graphics.setColor(1, 1, 1, 1)
-  else
-    love.graphics.setColor(1, 0.5, 1, 1)
-  end
+  love.graphics.setColor(Palette.white)
   love.graphics.draw(slotTexture, x, y)
+  love.graphics.setColor(Palette.white)
+  if self.hovered then
+    love.graphics.setColor(Palette.white)
+    love.graphics.setLineWidth(6)
+    love.graphics.rectangle("line", x, y, 128 - 6, 256 - 6)
+  end
+end
+
+function Slot:drawLabel()
+  local x, y = self.position.x, self.position.y
   love.graphics.setColor(Palette.paleMint)
-  love.graphics.rectangle("fill", x, y, 32, 32)
+  love.graphics.rectangle("fill", x + 32, y + 160, 64, 32)
   love.graphics.setColor(Palette.darkPurpleBlack)
-  love.graphics.print(self.count, x, y)
-
-  love.graphics.setColor(Palette.royalBlue)
-  love.graphics.setLineWidth(3)
-
-  love.graphics.rectangle("line", x, y, self.size.x, self.size.y)
+  love.graphics.print(self.count, x + 32, y + 160)
   love.graphics.setColor(Palette.white)
 end
 

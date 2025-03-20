@@ -17,7 +17,7 @@ Phase = {
 GameData = {
   slots = {},
   drinks = {},
-  phase = Phase.BUY,
+  phase = Phase.SELECT_DRINK,
   level = 0,
   objective = 100,
   score = 0,
@@ -71,7 +71,7 @@ MachineCanvas = love.graphics.newCanvas()
 function LoadGame()
   GameData.resources = ResourceManager.new():loadAll()
   GameData.resources:setDefaultFont('outfit_medium')
-  ChangeScene(Screens.menu)
+  ChangeScene(Screens.game)
 end
 
 local function drawBackground()
