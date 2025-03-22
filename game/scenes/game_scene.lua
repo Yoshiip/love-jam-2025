@@ -8,6 +8,22 @@ local GameScene = {
   totalDrinks = 0,
   drinksFalled = 0,
 }
+
+
+
+---@class Particle
+---@field x number
+---@field y number
+---@field time number
+
+---@class Particles
+---@field explosion Particle[]
+---@field fuel Particle[]
+Particles = {
+  explosion = {},
+  fuel = {},
+}
+
 GameScene.__index = GameScene
 setmetatable(GameScene, { __index = Scene })
 
@@ -68,8 +84,12 @@ function GameScene:fillMachine(rows, cols)
   end
 
 
-  for rx = 0, rows do
-    for ry = 0, cols, 1 do
+  for ry = 0, cols, 1 do
+    local rows_count = rows
+    if ry % 2 == 1 then
+      rows_count = rows_count - 2
+    end
+    for rx = 0, rows_count do
       local x = rx * SLOT_DEFAULT_SIZE.x
       local y = ry * SLOT_DEFAULT_SIZE.y
       if ry % 2 == 1 then
@@ -117,6 +137,15 @@ function GameScene:update(dt)
       combo.timeLeft = combo.timeLeft - dt
     end
   end
+
+  for i = #Particles.fuel, 1, -1 do
+    local particle = Particles.fuel[i]
+    particle.y = particle.y + 5 * dt
+    particle.time = particle.time - dt
+    if particle.time < 0 then
+      table.remove(Particles.fuel, i)
+    end
+  end
 end
 
 ---@param x number
@@ -127,13 +156,17 @@ local function drawLCDScreen(x, y)
   love.graphics.setColor(Palette.darkTeal)
   love.graphics.rectangle("fill", x, y, 200, 60, 4, 4)
   love.graphics.setColor(Palette.limeGreen)
-  love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
-  love.graphics.print('Objective ' .. GameData.objective, x + 16, y + 54)
+  if GameData.phase == Phase.BUY then
+    if GameData.hoveredSlot then
+      local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
+      love.graphics.print(drinkData.name, x + 16, y + 16)
+      love.graphics.print('Price: ' .. drinkData.price, x + 16, y + 54)
+    end
+  else
+    love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
+    love.graphics.print('Objective ' .. GameData.objective, x + 16, y + 54)
+  end
 end
-
-
-
-
 
 
 local function drawVendingMachine()
@@ -154,9 +187,19 @@ local function drawVendingMachine()
   return x + VendingMachinePadding.left, y + VendingMachinePadding.top
 end
 
+local function drawParticles()
+  for _, particle in ipairs(Particles.fuel) do
+    love.graphics.setColor(ColorWithAlpha(Palette.white, particle.time))
+    love.graphics.circle("fill", particle.x, particle.y, 20 * particle.time)
+  end
+  love.graphics.setColor(Palette.white)
+end
+
 local function drawInside(x, y)
   love.graphics.setCanvas(MachineCanvas)
   love.graphics.clear()
+  love.graphics.setColor(Palette.darkPurpleBlack)
+  love.graphics.rectangle("fill", 0, 0, MachineInnerSize.x, MachineInnerSize.y)
   for _, slot in ipairs(GameData.slots) do
     slot:draw()
   end
@@ -182,6 +225,8 @@ local function drawInside(x, y)
   for _, slot in ipairs(GameData.slots) do
     slot:drawLabel()
   end
+
+  drawParticles()
 end
 
 local TOOLTIP_SIZE = { x = 240, y = 120 }
@@ -218,7 +263,6 @@ end
 ---@param y number
 local function drawCombos(x, y)
   local oy = y
-  print(GameData.combos)
   local width = 200
   for _, combo in pairs(GameData.combos) do
     if combo.timeLeft > 0 then
@@ -250,9 +294,10 @@ local function drawUI()
   love.graphics.print(GameData.money .. "$", 4, 4)
 
   if GameData.phase == Phase.SIMULATION and GameData.mainDrink ~= nil then
-    love.graphics.print('CARBONATE', 32, 500)
-
-    love.graphics.print(math.floor(GameData.mainDrink.carbonLeft) .. '%', 32, 548)
+    GameData.resources:setDefaultFont('outfit_medium')
+    love.graphics.print('Fuel Left', 32, 500)
+    GameData.resources:setDefaultFont('outfit_title_bold')
+    love.graphics.print(math.floor(GameData.mainDrink.fuelLeft) .. '%', 32, 548)
   end
 
   drawCombos(32, 200)
@@ -269,6 +314,8 @@ local function drawUI()
     startButton:draw()
   end
 end
+
+
 
 
 
@@ -300,6 +347,7 @@ function GameScene:mousepressed(x, y, button)
           end
           GameData.money = GameData.money - drinkData.price
           slot:startStuck()
+          GameData.resources:playAudio('coin')
         end
       end
     end
@@ -318,6 +366,12 @@ function GameScene:mousepressed(x, y, button)
     end
   elseif GameData.phase == Phase.END then
     ChangeScene(Screens.results)
+  end
+end
+
+function GameScene:keypressed(key)
+  if key == 'space' and GameData.mainDrink ~= nil and GameData.mainDrink.fuelLeft > 0 then
+    GameData.resources:playAudio('fuel')
   end
 end
 
@@ -353,7 +407,6 @@ end
 
 ---@param drinkData DrinkData
 local function updateCombos(drinkData)
-  print(drinkData.name)
   addToCombo('default')
 
 
@@ -366,6 +419,13 @@ local function updateCombos(drinkData)
     addToCombo('sameType')
   else
     clearCombo('sameType')
+  end
+end
+
+local function resetCombos()
+  for key, _ in pairs(GameData.combos) do
+    GameData.combos[key].value = 0
+    GameData.combos[key].timeLeft = 0
   end
 end
 
@@ -382,6 +442,7 @@ function GameScene:drinkFalled(drink)
   GameData.lastDrinkType = drinkData.type
   if drink.main then
     GameData.phase = Phase.END
+    resetCombos()
   end
 end
 

@@ -1,6 +1,6 @@
 require 'Gimmedrinks.utils.math'
 local collision = require 'gimmedrinks.utils.collisions'
-local vector = require 'gimmedrinks.utils.vector'
+local DrinksData = require('Gimmedrinks.drinks_data')
 
 ---@class Drink
 ---@field slot Slot
@@ -8,7 +8,7 @@ local Drink = {
   id = "",
   position = { x = 0, y = 0 },
   sparkling = false,
-  carbonLeft = 100,
+  fuelLeft = 100,
   rotation = 0,
   angularVelocity = 0,
   angularAcceleration = 0,
@@ -22,6 +22,8 @@ local Drink = {
 }
 Drink.__index = Drink
 
+local maxParticleTimer = 0.03
+local particleTimer = maxParticleTimer
 local GRAVITY = 7.0
 
 ---@return Drink
@@ -31,13 +33,13 @@ function Drink.new(x, y, id)
   self.position = { x = x, y = y }
   self.velocity = { x = 0, y = 0 }
   self.rotation = 0
-  self.carbonLeft = 100
+  self.fuelLeft = DrinksData[id].fuel
   self.angularVelocity = 0
   self.angularAcceleration = 0
   return self
 end
 
-local COLLISION_RADIUS = 80
+local COLLISION_RADIUS = 32
 
 ---@return number, number
 function Drink:center()
@@ -79,16 +81,26 @@ function Drink:update(dt)
       self.angularAcceleration = self.angularAcceleration + ANGULAR_ACCEL
     end
 
-    if love.keyboard.isDown('space') and self.carbonLeft > 0 then
+    if love.keyboard.isDown('space') and self.fuelLeft > 0 then
       local propulsionAngle = math.rad(self.rotation + 90)
       local dir = {
         x = math.cos(propulsionAngle),
         y = math.sin(propulsionAngle)
       }
       local propulsionStrength = 18
+      particleTimer = particleTimer - dt
+      if particleTimer < 0.0 then
+        local cx, cy = self:center()
+        table.insert(Particles.fuel, {
+          x = cx,
+          y = cy,
+          time = 1,
+        })
+        particleTimer = maxParticleTimer
+      end
       self.velocity.x = self.velocity.x + dir.x * propulsionStrength * dt
       self.velocity.y = self.velocity.y + dir.y * propulsionStrength * dt
-      self.carbonLeft = self.carbonLeft - dt * 5
+      self.fuelLeft = self.fuelLeft - dt * 10
     end
 
     self.angularVelocity = self.angularVelocity + self.angularAcceleration * dt
@@ -104,9 +116,11 @@ function Drink:update(dt)
   end
 
   if self.position.x < 16 and self.velocity.x < 0 then
+    GameData.resources:playAudio('impact_metal')
     self.velocity.x = -self.velocity.x
     self.angularVelocity = self.angularVelocity + 5
   elseif self.position.x > MachineInnerSize.x - 16 and self.velocity.x > 0 then
+    GameData.resources:playAudio('impact_metal')
     self.velocity.x = -self.velocity.x
     self.angularVelocity = self.angularVelocity - 5
   end

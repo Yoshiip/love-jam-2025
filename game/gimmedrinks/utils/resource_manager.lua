@@ -28,6 +28,11 @@ local RESOURCE_PATHS = {
     sparklingRaspberry = 'Gimmedrinks/images/drinks/sparklingRaspberry.png',
     sparklingWater = 'Gimmedrinks/images/drinks/sparklingWater.png',
   },
+  sounds = {
+    fuel = 'Gimmedrinks/sfx/fuel.mp3',
+    coin = 'Gimmedrinks/sfx/coin.mp3',
+    impact_metal = 'Gimmedrinks/sfx/impact_metal.mp3',
+  },
   fonts = {
     outfit_title_bold = {
       path = 'Gimmedrinks/fonts/outfit_bold.ttf',
@@ -58,7 +63,8 @@ function ResourceManager.new()
   local self = setmetatable({}, ResourceManager)
   self.resources = {
     textures = {},
-    fonts = {}
+    fonts = {},
+    audios = {}
   }
   self.loadErrors = {}
   return self
@@ -113,8 +119,30 @@ function ResourceManager:loadFonts()
   return fonts
 end
 
+---@return table<string, love.Source> The loaded audio
+function ResourceManager:loadAudios()
+  local audios = {}
+
+  for name, path in pairs(RESOURCE_PATHS.sounds) do
+    local success, result = pcall(function()
+      return love.audio.newSource(path, "static")
+    end)
+
+
+    if success then
+      audios[name] = result
+    else
+      print("Error loading audio '" .. name .. "': " .. tostring(result))
+    end
+  end
+
+  self.resources.audios = audios
+  return audios
+end
+
 function ResourceManager:loadAll()
   self:loadTextures()
+  self:loadAudios()
   self:loadFonts()
   return self
 end
@@ -133,12 +161,24 @@ function ResourceManager:getFont(name)
   return self.resources.fonts[name]
 end
 
+---@return love.Source|nil audio
+function ResourceManager:getAudio(name)
+  return self.resources.audios[name]
+end
+
 ---Sets the default font to the specified font
 ---@param name FontName Name of the font to set as default
 function ResourceManager:setDefaultFont(name)
   local font = self:getFont(name)
   if font then
     love.graphics.setFont(font)
+  end
+end
+
+function ResourceManager:playAudio(name)
+  local source = GameData.resources:getAudio(name)
+  if source then
+    love.audio.play(source)
   end
 end
 

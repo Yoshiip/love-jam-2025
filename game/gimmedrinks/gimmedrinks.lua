@@ -68,9 +68,6 @@ GameData = {
     },
   },
   score = 0,
-  combo = 0,
-  sameTypeCombo = 0,
-  sameColorCombo = 0,
   money = 0,
   hoveredSlot = nil,
   mainDrink = nil,
@@ -187,4 +184,8 @@ end
 
 function love.mousepressed(x, y, button)
   GetScene():mousepressed(x, y, button)
+end
+
+function Keypressed(key)
+  GetScene():keypressed(key)
 end
