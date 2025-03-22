@@ -16,6 +16,7 @@ local RESOURCE_PATHS = {
     background = 'Gimmedrinks/images/background.jpg',
     vendingMachine = 'Gimmedrinks/images/vending_machine.png',
     pushDecoration = 'Gimmedrinks/images/push_decoration.png',
+    rightDecoration = 'Gimmedrinks/images/right_decoration.png',
     slot = 'Gimmedrinks/images/slot.png',
     -- DRINKS
     hibiscusWater = 'Gimmedrinks/images/drinks/hibiscusWater.png',

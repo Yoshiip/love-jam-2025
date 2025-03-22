@@ -28,7 +28,7 @@ GameScene.__index = GameScene
 setmetatable(GameScene, { __index = Scene })
 
 local SLOT_DEFAULT_SIZE = { x = 128, y = 256 }
-local MACHINE_CANVAS_SIZE = { x = 600, y = 600 }
+local MACHINE_CANVAS_SIZE = { x = 450, y = 600 }
 MachineInnerSize = { x = 0, y = 0 }
 local VendingMachinePadding = { left = 32, top = 32, right = 200, bottom = 128 }
 local VendingMachineOffset = { x = 0, y = 0 }
@@ -160,9 +160,6 @@ end
 ---@param y number
 local function drawLCDScreen(x, y)
   GameData.resources:setDefaultFont('lcd')
-
-  love.graphics.setColor(Palette.darkTeal)
-  love.graphics.rectangle("fill", x, y, 200, 60, 4, 4)
   love.graphics.setColor(Palette.limeGreen)
   if GameData.phase == Phase.BUY then
     if GameData.hoveredSlot then
@@ -184,7 +181,13 @@ local function drawVendingMachine()
   local x, y = VendingMachineOffset.x, VendingMachineOffset.y
   love.graphics.setColor(Palette.plumGray)
   love.graphics.rectangle("fill", x, y, w, h, 12, 12)
+  local rightDecoration = GameData.resources:getTexture('rightDecoration')
+  if rightDecoration then
+    love.graphics.setColor(Palette.white)
+    love.graphics.draw(rightDecoration, x + w - 240, y + 16, 0, 0.6, 0.6)
+  end
   drawLCDScreen(x + MACHINE_CANVAS_SIZE.x, y + VendingMachinePadding.top)
+
 
   love.graphics.setColor(1.0, 1.0, 1.0)
   local pushDecoration = GameData.resources:getTexture('pushDecoration')
@@ -203,7 +206,7 @@ local function drawParticles()
   love.graphics.setColor(Palette.white)
 end
 
-local function drawInside(x, y)
+local function drawInside()
   love.graphics.setCanvas(MachineCanvas)
   love.graphics.clear()
   love.graphics.setColor(Palette.darkPurpleBlack)
@@ -367,7 +370,7 @@ end
 
 function GameScene:draw()
   local mx, my = drawVendingMachine()
-  drawInside(mx, my)
+  drawInside()
   love.graphics.setCanvas()
   local minScale = math.min(
     MACHINE_CANVAS_SIZE.x / MachineInnerSize.x,
