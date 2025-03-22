@@ -168,11 +168,13 @@ end
 
 ---Sets the default font to the specified font
 ---@param name FontName Name of the font to set as default
+---@return love.Font|nil font The requested font or nil if not found
 function ResourceManager:setDefaultFont(name)
   local font = self:getFont(name)
   if font then
     love.graphics.setFont(font)
   end
+  return font
 end
 
 function ResourceManager:playAudio(name)

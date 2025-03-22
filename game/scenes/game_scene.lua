@@ -33,6 +33,9 @@ MachineInnerSize = { x = 0, y = 0 }
 local VendingMachinePadding = { left = 32, top = 32, right = 200, bottom = 128 }
 local VendingMachineOffset = { x = 0, y = 0 }
 
+local tooltip_position = { x = 0, y = 0 }
+
+
 function ScreenToMachineCanvas(x, y)
   local minScale = math.min(
     MACHINE_CANVAS_SIZE.x / MachineInnerSize.x,
@@ -138,6 +141,11 @@ function GameScene:update(dt)
     end
   end
 
+
+  local mx, my = love.mouse.getPosition()
+  tooltip_position.x = Lerp(tooltip_position.x, mx, 10.0 * dt)
+  tooltip_position.y = Lerp(tooltip_position.y, my, 10.0 * dt)
+
   for i = #Particles.fuel, 1, -1 do
     local particle = Particles.fuel[i]
     particle.y = particle.y + 5 * dt
@@ -229,6 +237,7 @@ local function drawInside(x, y)
   drawParticles()
 end
 
+
 local TOOLTIP_SIZE = { x = 240, y = 120 }
 
 
@@ -239,6 +248,17 @@ local function drawTooltip(x, y)
     if GameData.hoveredSlot.drinkId == nil then
       return
     end
+
+    local function drawBadge(text, bx, by, bgColor, textColor)
+      local font = GameData.resources:setDefaultFont('outfit_regular')
+      if font then
+        local h = font:getHeight()
+        love.graphics.setColor(Palette[bgColor])
+        love.graphics.rectangle("fill", bx, by, font:getWidth(text) + 8, h, h / 2, h / 2)
+        love.graphics.setColor(Palette[textColor])
+        love.graphics.print(text, bx + 4, by)
+      end
+    end
     GameData.resources:setDefaultFont("outfit_regular")
     local ty = y
     love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.3))
@@ -247,17 +267,20 @@ local function drawTooltip(x, y)
     love.graphics.setLineWidth(2)
     love.graphics.rectangle('line', x, ty, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
-    love.graphics.print(drinkData.name, x + 16, ty)
-    ty = ty + 32
+    love.graphics.print(drinkData.name, x + 16, ty + 16)
+    ty = ty + 48
     love.graphics.print('Value: ' .. drinkData.baseScore, x + 16, ty)
-    ty = ty + 32
-    love.graphics.print('x' .. #GameData.hoveredSlot.drinks, x + 16, ty)
-    ty = ty + 32
+    drawBadge(drinkData.type, x + 16, y - 16, 'white', 'darkPurpleBlack')
+    drawBadge('x' .. #GameData.hoveredSlot.drinks .. ' left', x + 128, y - 16, 'white', 'darkPurpleBlack')
+    ty = ty + 56
     if drinkData.type == 'sparkling' then
-      love.graphics.print('Sparkling (' .. drinkData.fuel .. ' fuel)', x + 16, ty)
+      drawBadge('Sparkling', x + 16, ty, 'goldenrod', 'white')
+      drawBadge('Fuel: ' .. drinkData.fuel .. '%', x + 140, ty, 'goldenrod', 'white')
     end
   end
 end
+
+
 
 ---@param x number
 ---@param y number
@@ -282,14 +305,37 @@ local function drawCombos(x, y)
   end
 end
 
-local function drawUI()
-  local mx, my = love.mouse.getPosition()
-  drawTooltip(mx + 12, my + 12)
-
-  if GameData.phase == Phase.SELECT_DRINK then
-    love.graphics.print('Select a drink...', 200, 300)
+---@param text string
+---@param x number
+---@param y number
+---@param font love.Font
+---@param ox number
+---@param oy number
+local function centeredText(text, x, y, font, ox, oy)
+  local cx, cy = x, y
+  if x == -1 then
+    cx = love.graphics.getWidth() / 2 - font:getWidth(text)
+  end
+  if y == -1 then
+    cy = love.graphics.getHeight() / 2 - font:getHeight()
   end
 
+  love.graphics.print(text, cx + ox, cy + ox)
+end
+
+local function drawUI()
+  drawTooltip(tooltip_position.x + 12, tooltip_position.y + 12)
+  love.graphics.setColor(Palette.white)
+
+  local title = GameData.resources:setDefaultFont('outfit_title_bold')
+  if title then
+    if GameData.phase == Phase.SELECT_DRINK then
+      centeredText('Select a drink...', -1, 200, title, 0, 0)
+    elseif GameData.phase == Phase.END then
+      centeredText('Click to continue...', -1, 200, title, 0, 0)
+    end
+  end
+  GameData.resources:setDefaultFont('outfit_regular')
 
   love.graphics.print(GameData.money .. "$", 4, 4)
 
@@ -441,6 +487,7 @@ function GameScene:drinkFalled(drink)
   GameData.lastDrinkColor = drinkData.color
   GameData.lastDrinkType = drinkData.type
   if drink.main then
+    print("Main est failé")
     GameData.phase = Phase.END
     resetCombos()
   end
