@@ -18,13 +18,15 @@ local RESOURCE_PATHS = {
     pushDecoration = 'Gimmedrinks/images/push_decoration.png',
     slot = 'Gimmedrinks/images/slot.png',
     -- DRINKS
-    drinkWater = 'Gimmedrinks/images/drinks/drink.png',
-    orangeSoda = 'Gimmedrinks/images/drinks/drink.png',
-    mintWater = 'Gimmedrinks/images/drinks/drink.png',
-    orangeWater = 'Gimmedrinks/images/drinks/drink.png',
-    sparklingWater = 'Gimmedrinks/images/drinks/drink.png',
-    stillWater = 'Gimmedrinks/images/drinks/drink.png',
-
+    hibiscusWater = 'Gimmedrinks/images/drinks/hibiscusWater.png',
+    mintWater = 'Gimmedrinks/images/drinks/mintWater.png',
+    orangeSoda = 'Gimmedrinks/images/drinks/orangeSoda.png',
+    orangeWater = 'Gimmedrinks/images/drinks/orangeWater.png',
+    stillWater = 'Gimmedrinks/images/drinks/stillWater.png',
+    sparklingApple = 'Gimmedrinks/images/drinks/sparklingApple.png',
+    sparklingOrange = 'Gimmedrinks/images/drinks/sparklingOrange.png',
+    sparklingRaspberry = 'Gimmedrinks/images/drinks/sparklingRaspberry.png',
+    sparklingWater = 'Gimmedrinks/images/drinks/sparklingWater.png',
   },
   fonts = {
     outfit_title_bold = {
