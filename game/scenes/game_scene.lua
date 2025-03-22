@@ -127,7 +127,8 @@ local function drawLCDScreen(x, y)
   love.graphics.setColor(Palette.darkTeal)
   love.graphics.rectangle("fill", x, y, 200, 60, 4, 4)
   love.graphics.setColor(Palette.limeGreen)
-  love.graphics.print('Level 1', x + 16, y + 16)
+  love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
+  love.graphics.print('Objective ' .. GameData.objective, x + 16, y + 54)
 end
 
 

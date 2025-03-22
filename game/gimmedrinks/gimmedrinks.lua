@@ -123,6 +123,9 @@ function LoadGame()
   ChangeScene(Screens.game)
 end
 
+local squareBg = { x = 0, y = 0 }
+local SQUARE_SIZE = 80
+
 local function drawBackground()
   love.graphics.setColor(1.0, 1.0, 1.0)
   local bg = GameData.resources:getTexture('background')
@@ -136,6 +139,16 @@ local function drawBackground()
   local offsetX = (screenW - imgW * scale) / 2
   local offsetY = (screenH - imgH * scale) / 2
   love.graphics.draw(bg, offsetX, offsetY, 0, scale, scale)
+
+  love.graphics.setColor(ColorWithAlpha(Palette.darkPurpleBlack, 0.3))
+  for x = -2, math.ceil(love.graphics.getWidth() / SQUARE_SIZE), 1 do
+    for y = -2, math.ceil(love.graphics.getHeight() / SQUARE_SIZE), 1 do
+      if x % 2 == y % 2 then
+        love.graphics.rectangle("fill", x * SQUARE_SIZE + squareBg.x, y * SQUARE_SIZE + squareBg.y, SQUARE_SIZE,
+          SQUARE_SIZE)
+      end
+    end
+  end
 end
 function DrawGame()
   love.graphics.setBackgroundColor(HexToRGBA("#4D65B4"))
@@ -146,6 +159,12 @@ end
 
 function UpdateGame(dt)
   GetScene():update(dt)
+
+  squareBg.x = squareBg.x + dt * 4
+  squareBg.y = squareBg.y + dt * 4
+  if squareBg.x > SQUARE_SIZE then
+    squareBg = { x = 0, y = 0 }
+  end
 end
 
 --- get index of item in list
