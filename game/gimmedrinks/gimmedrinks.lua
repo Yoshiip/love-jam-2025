@@ -8,20 +8,69 @@ Phase = {
   END = 3
 }
 
+---@class Combo
+---@field value number
+---@field timeLeft number
+---@field maxTimeLeft number
+---@field strength number
+---@field label string
+
 ---@class GameData
 ---@field drinks Drink[]
 ---@field slots Slot[]
 ---@field hoveredSlot Slot?
 ---@field mainDrink Drink?
 ---@field resources ResourceManager?
+---@field lastDrinkColor DrinkColor
+---@field lastDrinkType DrinkType
+---@field combos table<string, Combo>
 GameData = {
   slots = {},
   drinks = {},
   phase = Phase.SELECT_DRINK,
   level = 0,
   objective = 100,
+  combos = {
+    default = {
+      label = 'Default',
+      maxTimeLeft = 6,
+      strength = 0.2,
+      timeLeft = 0,
+      value = 0,
+    },
+    sameColor = {
+      label = 'Same Color',
+      maxTimeLeft = 10,
+      strength = 0.3,
+      timeLeft = 0,
+      value = 0,
+    },
+    sameType = {
+      label = 'Same Type',
+      maxTimeLeft = 10,
+      strength = 0.5,
+      timeLeft = 0,
+      value = 0,
+    },
+    turn = {
+      label = '360',
+      strength = 5,
+      maxTimeLeft = 10,
+      timeLeft = 0,
+      value = 0,
+    },
+    bounce = {
+      label = 'Bounce',
+      strength = 5,
+      maxTimeLeft = 10,
+      timeLeft = 0,
+      value = 0,
+    },
+  },
   score = 0,
   combo = 0,
+  sameTypeCombo = 0,
+  sameColorCombo = 0,
   money = 0,
   hoveredSlot = nil,
   mainDrink = nil,

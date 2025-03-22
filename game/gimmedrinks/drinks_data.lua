@@ -7,7 +7,7 @@
 ---@field color DrinkColor
 ---@field price number
 ---@field baseScore number
----@field baseCarbon number
+---@field fuel number
 ---@field rarity number
 ---@field minLevel? number
 
@@ -20,7 +20,7 @@ local DRINKS_DATA = {
     color = 'clear',
     baseScore = 10,
     rarity = 1,
-    baseCarbon = 0,
+    fuel = 0,
     price = 2,
   },
   orangeWater = {
@@ -28,8 +28,8 @@ local DRINKS_DATA = {
     type = 'plain',
     color = 'orange',
     baseScore = 15,
-    baseCarbon = 0,
-    price = 2,
+    fuel = 0,
+    price = 3,
     rarity = 0,
   },
   mintWater = {
@@ -37,8 +37,8 @@ local DRINKS_DATA = {
     type = 'plain',
     color = 'green',
     baseScore = 15,
-    baseCarbon = 0,
-    price = 2,
+    fuel = 0,
+    price = 3,
     rarity = 0,
   },
   hibiscusWater = {
@@ -46,9 +46,9 @@ local DRINKS_DATA = {
     type = 'plain',
     color = 'red',
     baseScore = 15,
-    baseCarbon = 0,
+    fuel = 0,
     price = 2,
-    rarity = 2,
+    rarity = 4,
     minLevel = 2
   },
   -- SPARKLINGS
@@ -57,8 +57,8 @@ local DRINKS_DATA = {
     type = 'sparkling',
     color = 'clear',
     baseScore = 20,
-    baseCarbon = 10,
-    price = 2,
+    fuel = 10,
+    price = 4,
     rarity = 0,
   },
   sparklingOrange = {
@@ -66,8 +66,8 @@ local DRINKS_DATA = {
     type = 'sparkling',
     color = 'orange',
     baseScore = 15,
-    baseCarbon = 0,
-    price = 2,
+    fuel = 0,
+    price = 5,
     rarity = 0,
   },
   sparklingApple = {
@@ -75,8 +75,8 @@ local DRINKS_DATA = {
     type = 'plain',
     color = 'green',
     baseScore = 15,
-    baseCarbon = 0,
-    price = 2,
+    fuel = 0,
+    price = 5,
     rarity = 0,
   },
   sparklingRaspberry = {
@@ -84,8 +84,8 @@ local DRINKS_DATA = {
     type = 'sparkling',
     color = 'red',
     baseScore = 15,
-    baseCarbon = 75,
-    price = 5,
+    fuel = 75,
+    price = 6,
     rarity = 3,
     minLevel = 2
   },
@@ -96,7 +96,7 @@ local DRINKS_DATA = {
   --   type = 'sparkling',
   --   color = 'clear',
   --   baseScore = 20,
-  --   baseCarbon = 10,
+  --   fuel = 10,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -105,7 +105,7 @@ local DRINKS_DATA = {
   --   type = 'soda',
   --   color = 'orange',
   --   baseScore = 15,
-  --   baseCarbon = 0,
+  --   fuel = 0,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -114,7 +114,7 @@ local DRINKS_DATA = {
   --   type = 'soda',
   --   color = 'green',
   --   baseScore = 15,
-  --   baseCarbon = 0,
+  --   fuel = 0,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -123,7 +123,7 @@ local DRINKS_DATA = {
   --   type = 'soda',
   --   color = 'red',
   --   baseScore = 15,
-  --   baseCarbon = 75,
+  --   fuel = 75,
   --   price = 5,
   --   rarity = 3,
   --   minLevel = 2
@@ -134,7 +134,7 @@ local DRINKS_DATA = {
   --   type = 'smoothie',
   --   color = 'clear',
   --   baseScore = 50,
-  --   baseCarbon = 10,
+  --   fuel = 10,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -143,7 +143,7 @@ local DRINKS_DATA = {
   --   type = 'smoothie',
   --   color = 'orange',
   --   baseScore = 50,
-  --   baseCarbon = 0,
+  --   fuel = 0,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -152,7 +152,7 @@ local DRINKS_DATA = {
   --   type = 'smoothie',
   --   color = 'green',
   --   baseScore = 50,
-  --   baseCarbon = 0,
+  --   fuel = 0,
   --   price = 2,
   --   rarity = 0,
   -- },
@@ -160,7 +160,7 @@ local DRINKS_DATA = {
   --   name = "Berry Smoothie",
   --   type = 'smoothie',
   --   color = 'red',
-  --   baseCarbon = 0,
+  --   fuel = 0,
   --   baseScore = 75,
   --   price = 6,
   --   rarity = 4,

@@ -12,8 +12,8 @@ local Drink = {
   rotation = 0,
   angularVelocity = 0,
   angularAcceleration = 0,
-  defaultQuad = love.graphics.newQuad(0, 0, 256, 512, 512, 512),
-  stuckQuad = love.graphics.newQuad(256, 0, 256, 256, 512, 512),
+  defaultQuad = love.graphics.newQuad(0, 0, 128, 256, 256, 256),
+  stuckQuad = love.graphics.newQuad(128, 0, 128, 128, 256, 256),
   main = false,
   enabled = false,
   stuck = false,
@@ -22,7 +22,7 @@ local Drink = {
 }
 Drink.__index = Drink
 
-local GRAVITY = 3.0
+local GRAVITY = 7.0
 
 ---@return Drink
 function Drink.new(x, y, id)
@@ -42,9 +42,9 @@ local COLLISION_RADIUS = 80
 ---@return number, number
 function Drink:center()
   if self.stuck then
-    return self.position.x, self.position.y + 128
+    return self.position.x + 32, self.position.y + 128
   else
-    return self.position.x, self.position.y - 96
+    return self.position.x + 32, self.position.y + 96
   end
 end
 
@@ -53,16 +53,21 @@ function Drink:handleCollisions()
     local x, y = self:center()
     for _, drink in pairs(GameData.drinks) do
       local ox, oy = drink:center()
-      if drink.stuck and not drink.enabled and collision.collisionCircleRectangle(ox, oy, COLLISION_RADIUS, x, y, 128, 256) then
+      if drink.stuck and not drink.enabled and collision.collisionCircleRectangle(ox, oy, COLLISION_RADIUS, x, y, 128, 128) then
         local impactX = x - ox
         local impactStrength = Clamp(impactX, -5, 5)
         self.velocity.y = -5
         self.velocity.x = impactStrength
         self.angularVelocity = self.angularVelocity + impactStrength * 0.1
-        drink.enabled = true
+        drink:detach()
       end
     end
   end
+end
+
+function Drink:detach()
+  self.enabled = true
+  self.slot:detached(self)
 end
 
 function Drink:update(dt)
@@ -106,11 +111,8 @@ function Drink:update(dt)
     self.angularVelocity = self.angularVelocity - 5
   end
 
-  if self.position.y > MachineInnerSize.y then
-    GameData.score = GameData.score + 5
-    if self.main then
-      GetScene():mainFalled()
-    end
+  if self.position.y > MachineInnerSize.y + 200 then
+    GetScene():drinkFalled(self)
     self:remove()
   end
 
@@ -127,23 +129,33 @@ end
 function Drink:draw()
   local color = LerpColor(Palette.white, { 0.5, 0.5, 0.5, 1.0 }, self.order / 3)
   love.graphics.setColor(color)
-  local scale = Lerp(0.25, 0.20, self.order / 3)
+  local scale = Lerp(0.8, 0.50, self.order / 3)
   local x, y = self.position.x, self.position.y
   -- x = x - (scale - 0.25) * 72
   local texture = GameData.resources:getTexture(self.id)
   if texture == nil then
     return
   end
+  local cx, cy = self:center()
   if self.stuck then
-    love.graphics.draw(texture, self.stuckQuad, x, y + 96, 0, scale, scale)
+    love.graphics.draw(texture, self.stuckQuad, cx, cy, 0, scale, scale, 64, 64)
   else
-    love.graphics.draw(texture, self.defaultQuad, x, y + 64, math.rad(self.rotation), scale, scale, 128, 256)
+    if self.enabled then
+      love.graphics.setColor(Palette.white)
+    elseif GameData.phase == Phase.SIMULATION then
+      love.graphics.setColor(0.5, 0.5, 0.5)
+    else
+      love.graphics.setColor(0.7, 0.7, 0.7)
+    end
+
+    love.graphics.draw(texture, self.defaultQuad, cx, cy, math.rad(self.rotation), scale, scale, 64, 128)
+    love.graphics.setColor(Palette.white)
   end
 
   love.graphics.setColor(Palette.darkRed)
   love.graphics.setLineWidth(3)
   if self.stuck then
-    love.graphics.circle("fill", x + 32, y + 128, COLLISION_RADIUS)
+    -- love.graphics.circle("fill", x + 32, y + 128, COLLISION_RADIUS)
   else
     love.graphics.rectangle("line", x, y + 64, 64, 128)
   end

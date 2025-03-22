@@ -39,11 +39,11 @@ local RESOURCE_PATHS = {
     },
     outfit_medium = {
       path = 'Gimmedrinks/fonts/outfit_medium.ttf',
-      size = 32,
+      size = 28,
     },
     outfit_regular = {
       path = 'Gimmedrinks/fonts/outfit_regular.ttf',
-      size = 32,
+      size = 24,
     },
     lcd = {
       path = 'Gimmedrinks/fonts/lcd.otf',

@@ -6,9 +6,9 @@ local Slot = {
   position = { x = 0, y = 0 },
   size = { x = 0, y = 0 },
   stuck = false,
+  move = false,
   hovered = false,
   drinkId = '',
-  count = 0,
 }
 
 
@@ -21,7 +21,6 @@ function Slot.new(x, y, drinkId, count, width, height)
   self.position = { x = x, y = y }
   self.size = { x = width, y = height }
   self.drinkId = drinkId
-  self.count = count
 
 
   local spacing = 12
@@ -37,6 +36,15 @@ function Slot.new(x, y, drinkId, count, width, height)
 end
 
 function Slot:update(dt)
+  if #self.drinks > 0 and self.stuck and self.move then
+    for _, d in ipairs(self.drinks) do
+      d.order = d.order - dt
+    end
+    if self.drinks[1].order < 0 then
+      self.drinks[1].stuck = true
+      self.move = false
+    end
+  end
 end
 
 function Slot:draw()
@@ -57,10 +65,14 @@ end
 
 function Slot:drawLabel()
   local x, y = self.position.x, self.position.y
-  love.graphics.setColor(Palette.paleMint)
-  love.graphics.rectangle("fill", x + 32, y + 160, 64, 32)
+  if #self.drinks == 0 then
+
+  else
+    love.graphics.setColor(Palette.paleMint)
+  end
+  love.graphics.rectangle("fill", x + 16, y + 32, 96, 32)
   love.graphics.setColor(Palette.darkPurpleBlack)
-  love.graphics.print(self.count, x + 32, y + 160)
+  love.graphics.print('x' .. #self.drinks, x + 48, y + 32)
   love.graphics.setColor(Palette.white)
 end
 
@@ -85,6 +97,12 @@ end
 function Slot:unstuck()
   self.stuck = false
   self.drinks[1].stuck = false
+end
+
+---@param drink Drink
+function Slot:detached(drink)
+  table.remove(self.drinks, IndexOf(self.drinks, drink))
+  self.move = true
 end
 
 return Slot

@@ -37,7 +37,7 @@ end
 function GameScene:start()
   GameData.phase = Phase.BUY
   GameData.score = 0
-  GameData.money = 10
+  GameData.money = 40
   GameData.drinks = {}
   GameData.slots = {}
   self:restart()
@@ -111,6 +111,12 @@ function GameScene:update(dt)
   if GameData.phase == Phase.BUY and startButton then
     startButton:update()
   end
+
+  for _, combo in pairs(GameData.combos) do
+    if combo.timeLeft > 0 then
+      combo.timeLeft = combo.timeLeft - dt
+    end
+  end
 end
 
 ---@param x number
@@ -156,8 +162,17 @@ local function drawInside(x, y)
 
 
   table.sort(GameData.drinks, function(a, b)
-    return a.order > b.order
+    if a.enabled ~= b.enabled then
+      return a.enabled and not b.enabled
+    end
+    return b.order > a.order
   end)
+
+  for i = 1, math.floor(#GameData.drinks / 2) do
+    local j = #GameData.drinks - i + 1
+    GameData.drinks[i], GameData.drinks[j] = GameData.drinks[j], GameData.drinks[i]
+  end
+
 
   for _, drink in ipairs(GameData.drinks) do
     drink:draw()
@@ -179,16 +194,45 @@ local function drawTooltip(x, y)
       return
     end
     GameData.resources:setDefaultFont("outfit_regular")
+    local ty = y
     love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.3))
-    love.graphics.rectangle("fill", x, y, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
+    love.graphics.rectangle("fill", x, ty, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     love.graphics.setColor(Palette.white)
     love.graphics.setLineWidth(2)
-    love.graphics.rectangle('line', x, y, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
+    love.graphics.rectangle('line', x, ty, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
-    love.graphics.print(drinkData.name, x + 16, y + 16)
-    love.graphics.print('x' .. #GameData.hoveredSlot.drinks, x + 16, y + 64)
-    if drinkData.sparkling then
-      love.graphics.print('Sparkling', x + 16, y + 96)
+    love.graphics.print(drinkData.name, x + 16, ty)
+    ty = ty + 32
+    love.graphics.print('Value: ' .. drinkData.baseScore, x + 16, ty)
+    ty = ty + 32
+    love.graphics.print('x' .. #GameData.hoveredSlot.drinks, x + 16, ty)
+    ty = ty + 32
+    if drinkData.type == 'sparkling' then
+      love.graphics.print('Sparkling (' .. drinkData.fuel .. ' fuel)', x + 16, ty)
+    end
+  end
+end
+
+---@param x number
+---@param y number
+local function drawCombos(x, y)
+  local oy = y
+  print(GameData.combos)
+  local width = 200
+  for _, combo in pairs(GameData.combos) do
+    if combo.timeLeft > 0 then
+      love.graphics.setColor(Palette.white)
+      GameData.resources:setDefaultFont("outfit_regular")
+      love.graphics.print(combo.label, x, oy)
+      GameData.resources:setDefaultFont("outfit_title_bold")
+      local tx = GameData.resources:getFont('outfit_title_bold'):getWidth(combo.value .. 'x')
+      love.graphics.print(combo.value .. 'x', x + width - tx, oy - 16)
+      love.graphics.setColor(Palette.darkPurpleBlack)
+      love.graphics.rectangle("fill", x, oy + 40, width, 8)
+      love.graphics.setColor(Palette.white)
+      love.graphics.rectangle("fill", x, oy + 40, width * (combo.timeLeft / combo.maxTimeLeft), 8)
+
+      oy = oy + 56
     end
   end
 end
@@ -203,7 +247,6 @@ local function drawUI()
 
 
   love.graphics.print(GameData.money .. "$", 4, 4)
-  love.graphics.print(GameData.score, 4, 32)
 
   if GameData.phase == Phase.SIMULATION and GameData.mainDrink ~= nil then
     love.graphics.print('CARBONATE', 32, 500)
@@ -211,6 +254,13 @@ local function drawUI()
     love.graphics.print(math.floor(GameData.mainDrink.carbonLeft) .. '%', 32, 548)
   end
 
+  drawCombos(32, 200)
+
+
+  GameData.resources:setDefaultFont('outfit_title_bold')
+  love.graphics.print(GameData.score, 1020, 32)
+  GameData.resources:setDefaultFont('outfit_medium')
+  love.graphics.print('Objective: ' .. GameData.objective, 960, 90)
 
 
 
@@ -271,12 +321,67 @@ function GameScene:mousepressed(x, y, button)
 end
 
 function GameScene:mousereleased(x, y, button)
-  if button == 1 then
+end
+
+---@return number
+local function getCombo()
+  local total = 0
+  for _, c in pairs(GameData.combos) do
+    if c.timeLeft > 0 then
+      total = total + c.value * c.strength
+    end
+  end
+  return total
+end
+
+
+local function clearCombo(id)
+  GameData.combos[id].timeLeft = 0
+  GameData.combos[id].value = 0
+end
+
+---@param comboId string
+local function addToCombo(comboId)
+  if GameData.combos[comboId].timeLeft < 0 then
+    GameData.combos[comboId].value = 0
+  end
+  GameData.combos[comboId].value = GameData.combos[comboId].value + 1
+  GameData.combos[comboId].timeLeft = GameData.combos[comboId].maxTimeLeft
+end
+
+
+---@param drinkData DrinkData
+local function updateCombos(drinkData)
+  print(drinkData.name)
+  addToCombo('default')
+
+
+  if drinkData.color == GameData.lastDrinkColor then
+    addToCombo('sameColor')
+  else
+    clearCombo('sameColor')
+  end
+  if drinkData.type == GameData.lastDrinkType then
+    addToCombo('sameType')
+  else
+    clearCombo('sameType')
   end
 end
 
-function GameScene:mainFalled()
-  GameData.phase = Phase.END
+
+---@param drink Drink
+function GameScene:drinkFalled(drink)
+  ---@type DrinkData
+  local drinkData = DrinksData[drink.id]
+  updateCombos(drinkData)
+
+  local multiplier = 1 + getCombo() / 10
+  GameData.score = GameData.score + math.floor(drinkData.baseScore * multiplier)
+  GameData.lastDrinkColor = drinkData.color
+  GameData.lastDrinkType = drinkData.type
+  if drink.main then
+    GameData.phase = Phase.END
+  end
 end
 
 return GameScene
