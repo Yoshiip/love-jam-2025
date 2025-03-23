@@ -120,8 +120,6 @@ end
 function GameScene:update(dt)
   trauma = Lerp(trauma, 0, dt * 10.0)
 
-  print(GameData.phase)
-
   GameData.hoveredSlot = nil
   for _, slot in ipairs(GameData.slots) do
     slot:update(dt)
@@ -426,6 +424,7 @@ function GameScene:mousepressed(x, y, button)
         local drinkData = DrinksData[slot.drinkId]
         if not slot.stuck then
           local drink = slot.drinks[1]
+          drink.slot:detached(drink)
           drink.enabled = true
           drink.main = true
           GameData.mainDrink = drink

@@ -18,6 +18,7 @@ local Drink = {
   flying = false,
   main = false,
   enabled = false,
+  bounceTimer = 0.0,
   stuck = false,
   order = 0,
   velocity = { x = 0, y = 0 }
@@ -102,12 +103,10 @@ function Drink:explode()
   self:remove()
 end
 
-local bounceTimer = 0.0
-
 function Drink:bounced()
-  if self.enabled and not self.flying and self.main and bounceTimer < 0.0 then
+  if self.enabled and not self.flying and self.main and self.bounceTimer < 0.0 then
     AddToCombo('bounce')
-    bounceTimer = 0.5
+    self.bounceTimer = 0.5
   end
 end
 
@@ -170,7 +169,7 @@ function Drink:update(dt)
     self.velocity.y = 0
   end
 
-  bounceTimer = bounceTimer - dt
+  self.bounceTimer = self.bounceTimer - dt
   if self.position.x < 16 and self.velocity.x < 0 then
     GameData.resources:playAudio('impact_metal')
     self.velocity.x = -self.velocity.x
@@ -193,9 +192,6 @@ function Drink:update(dt)
 end
 
 function Drink:remove()
-  if self.slot ~= nil then
-    table.remove(self.slot.drinks, IndexOf(self.slot.drinks, self))
-  end
   table.remove(GameData.drinks, IndexOf(GameData.drinks, self))
 end
 
