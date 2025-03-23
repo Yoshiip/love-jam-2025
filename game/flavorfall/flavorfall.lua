@@ -82,6 +82,8 @@ local EndScene = require("flavorfall.scenes.end_scene")
 
 local CurrentScreen = 1
 
+local mouseVelocity = { x = 0, y = 0 }
+
 Screens = {
   menu = 1,
   game = 2,
@@ -117,7 +119,7 @@ MachineCanvas = love.graphics.newCanvas()
 function LoadGame()
   GameData.resources = ResourceManager.new():loadAll()
   GameData.resources:setDefaultFont('outfit_medium')
-  ChangeScene(Screens.game)
+  ChangeScene(Screens.menu)
 end
 
 local squareBg = { x = 0, y = 0 }
@@ -154,14 +156,22 @@ function DrawGame()
   GetScene():draw()
 end
 
+local lastMouse = { x = 0, y = 0 }
+
 function UpdateGame(dt)
   GetScene():update(dt)
 
-  squareBg.x = squareBg.x + dt * 4
-  squareBg.y = squareBg.y + dt * 4
-  if squareBg.x > SQUARE_SIZE then
-    squareBg = { x = 0, y = 0 }
-  end
+  mouseVelocity.x = mouseVelocity.x + (love.mouse.getX() - lastMouse.x) * dt
+  mouseVelocity.y = mouseVelocity.y + (love.mouse.getY() - lastMouse.y) * dt
+  lastMouse.x, lastMouse.y = love.mouse.getPosition()
+
+  mouseVelocity.x = Lerp(mouseVelocity.x, 0, dt)
+  mouseVelocity.y = Lerp(mouseVelocity.y, 0, dt)
+
+  squareBg.x = (squareBg.x + mouseVelocity.x * 0.2) + dt * 4
+  squareBg.y = (squareBg.y + mouseVelocity.y * 0.2) + dt * 4
+  squareBg.x = squareBg.x % (SQUARE_SIZE * 2)
+  squareBg.y = squareBg.y % (SQUARE_SIZE * 2)
 end
 
 --- get index of item in list

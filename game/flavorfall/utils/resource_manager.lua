@@ -29,6 +29,9 @@ local RESOURCE_PATHS = {
     sparklingRaspberry = 'flavorfall/images/drinks/sparklingRaspberry.png',
     sparklingWater = 'flavorfall/images/drinks/sparklingWater.png',
   },
+  musics = {
+    ingame = 'flavorfall/musics/music.mp3'
+  },
   sounds = {
     fuel = 'flavorfall/sfx/fuel.mp3',
     coin = 'flavorfall/sfx/coin.mp3',
@@ -65,7 +68,8 @@ function ResourceManager.new()
   self.resources = {
     textures = {},
     fonts = {},
-    audios = {}
+    audios = {},
+    musics = {}
   }
   self.loadErrors = {}
   return self
@@ -141,9 +145,31 @@ function ResourceManager:loadAudios()
   return audios
 end
 
+---@return table<string, love.Source> The loaded audio
+function ResourceManager:loadMusics()
+  local musics = {}
+
+  for name, path in pairs(RESOURCE_PATHS.musics) do
+    local success, result = pcall(function()
+      return love.audio.newSource(path, "stream")
+    end)
+
+
+    if success then
+      musics[name] = result
+    else
+      print("Error loading audio '" .. name .. "': " .. tostring(result))
+    end
+  end
+
+  self.resources.musics = musics
+  return musics
+end
+
 function ResourceManager:loadAll()
   self:loadTextures()
   self:loadAudios()
+  self:loadMusics()
   self:loadFonts()
   return self
 end
@@ -165,6 +191,11 @@ end
 ---@return love.Source|nil audio
 function ResourceManager:getAudio(name)
   return self.resources.audios[name]
+end
+
+---@return love.Source|nil audio
+function ResourceManager:getMusic(name)
+  return self.resources.musics[name]
 end
 
 ---Sets the default font to the specified font

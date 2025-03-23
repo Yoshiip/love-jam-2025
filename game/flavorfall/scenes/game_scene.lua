@@ -59,6 +59,11 @@ function GameScene:start()
   GameData.money = 40
   GameData.drinks = {}
   GameData.slots = {}
+  local music = GameData.resources:getMusic('ingame')
+  print(music)
+  if music then
+    love.audio.play(music)
+  end
   self:restart()
 end
 
