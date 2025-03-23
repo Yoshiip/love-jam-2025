@@ -14,18 +14,28 @@ local startButton
 
 
 function MenuScene:start()
-  startButton = Button.new(64, 64, 'New game', function()
+  startButton = Button.new(560, 64, 'Play', function()
     ChangeScene(Screens.game)
   end)
 end
 
-function MenuScene:update()
+local i = 0.0
+
+function MenuScene:update(dt)
+  i = i + dt
   if startButton then startButton:update() end
 end
 
 function MenuScene:draw()
-  love.graphics.print('SUPER GAME', 32, 32)
-  love.graphics.print('LOVE Jam 2025', 32, love.graphics.getHeight() - 32)
+  love.graphics.setColor(Palette.white)
+  local font = GameData.resources:setDefaultFont('outfit_title_bold')
+  if font then
+    CenteredText('FLAVORFALL', -1, -1, font, 0, -64)
+  end
+  local bold = GameData.resources:setDefaultFont('outfit_bold')
+  if bold then
+    CenteredText('LOVE Jam 2025', -1, love.graphics.getHeight() - 64, bold, 0, 0)
+  end
   if startButton then startButton:draw() end
 end
 

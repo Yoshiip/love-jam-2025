@@ -1,5 +1,6 @@
 require "flavorfall.utils.color"
 require "flavorfall.palette"
+local vector = require "flavorfall.utils.vector"
 
 Phase = {
   BUY = 1,
@@ -28,8 +29,7 @@ GameData = {
   slots = {},
   drinks = {},
   phase = Phase.SELECT_DRINK,
-  level = 0,
-  objective = 100,
+  level = 1,
   combos = {
     default = {
       label = 'Default',
@@ -73,6 +73,27 @@ GameData = {
   mainDrink = nil,
   resources = nil
 }
+
+local BACKGROUND_COLORS = {
+  Palette.turquoise,
+  Palette.cornflowerBlue,
+  Palette.orange,
+  Palette.brightOrange,
+  Palette.hotPinkBright,
+  Palette.dustyRose,
+}
+
+SCORE_OBJECTIVES = {
+  100,
+  300,
+  500,
+  1000,
+  2500,
+  5000
+}
+
+local bgColor = BACKGROUND_COLORS[1]
+
 
 local ResourceManager = require('flavorfall.utils.resource_manager')
 local MenuScene = require("flavorfall.scenes.menu_scene")
@@ -119,7 +140,7 @@ MachineCanvas = love.graphics.newCanvas()
 function LoadGame()
   GameData.resources = ResourceManager.new():loadAll()
   GameData.resources:setDefaultFont('outfit_medium')
-  ChangeScene(Screens.menu)
+  ChangeScene(Screens.game)
 end
 
 local squareBg = { x = 0, y = 0 }
@@ -137,14 +158,16 @@ local function drawBackground()
   local scale = math.max(screenW / imgW, screenH / imgH)
   local offsetX = (screenW - imgW * scale) / 2
   local offsetY = (screenH - imgH * scale) / 2
+  love.graphics.setColor(bgColor)
   love.graphics.draw(bg, offsetX, offsetY, 0, scale, scale)
 
   love.graphics.setColor(ColorWithAlpha(Palette.darkPurpleBlack, 0.3))
+  local radius = vector.length(mouseVelocity.x, mouseVelocity.y) * 3.0
   for x = -2, math.ceil(love.graphics.getWidth() / SQUARE_SIZE), 1 do
     for y = -2, math.ceil(love.graphics.getHeight() / SQUARE_SIZE), 1 do
       if x % 2 == y % 2 then
         love.graphics.rectangle("fill", x * SQUARE_SIZE + squareBg.x, y * SQUARE_SIZE + squareBg.y, SQUARE_SIZE,
-          SQUARE_SIZE)
+          SQUARE_SIZE, radius, radius)
       end
     end
   end

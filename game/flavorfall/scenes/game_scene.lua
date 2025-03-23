@@ -2,6 +2,7 @@ local Slot = require('flavorfall.drinks.slot')
 local DrinksData = require('flavorfall.drinks_data')
 local Button = require('flavorfall.ui.button')
 local Scene = require("flavorfall.scenes.scene")
+require "flavorfall.utils.str"
 
 ---@class GameScene: Scene
 local GameScene = {
@@ -34,7 +35,7 @@ local VendingMachinePadding = { left = 32, top = 32, right = 200, bottom = 128 }
 local VendingMachineOffset = { x = 0, y = 0 }
 
 local tooltip_position = { x = 0, y = 0 }
-
+local trauma = 0
 
 function ScreenToMachineCanvas(x, y)
   local minScale = math.min(
@@ -59,11 +60,10 @@ function GameScene:start()
   GameData.money = 40
   GameData.drinks = {}
   GameData.slots = {}
-  local music = GameData.resources:getMusic('ingame')
-  print(music)
-  if music then
-    love.audio.play(music)
-  end
+  -- local music = GameData.resources:getMusic('ingame')
+  -- if music then
+  --   love.audio.play(music)
+  -- end
   self:restart()
 end
 
@@ -114,16 +114,9 @@ function GameScene:fillMachine(rows, cols)
   calculateVendingMachineOffset()
 end
 
-function GameScene:restart()
-  self:fillMachine(8, 6)
-
-
-  startButton = Button.new(32, 32, 'Start', function()
-    GameData.phase = Phase.SELECT_DRINK
-  end)
-end
-
 function GameScene:update(dt)
+  trauma = Lerp(trauma, 0, dt * 10.0)
+
   GameData.hoveredSlot = nil
   for _, slot in ipairs(GameData.slots) do
     slot:update(dt)
@@ -174,7 +167,7 @@ local function drawLCDScreen(x, y)
     end
   else
     love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
-    love.graphics.print('Objective ' .. GameData.objective, x + 16, y + 54)
+    love.graphics.print('Objective ' .. SCORE_OBJECTIVES[GameData.level], x + 16, y + 54)
   end
 end
 
@@ -191,6 +184,7 @@ local function drawVendingMachine()
     love.graphics.setColor(Palette.white)
     love.graphics.draw(rightDecoration, x + w - 240, y + 16, 0, 0.6, 0.6)
   end
+  love.graphics.print('Level ' .. GameData.level .. '/6', x, y)
   drawLCDScreen(x + MACHINE_CANVAS_SIZE.x, y + VendingMachinePadding.top)
 
 
@@ -313,24 +307,6 @@ local function drawCombos(x, y)
   end
 end
 
----@param text string
----@param x number
----@param y number
----@param font love.Font
----@param ox number
----@param oy number
-local function centeredText(text, x, y, font, ox, oy)
-  local cx, cy = x, y
-  if x == -1 then
-    cx = love.graphics.getWidth() / 2 - font:getWidth(text)
-  end
-  if y == -1 then
-    cy = love.graphics.getHeight() / 2 - font:getHeight()
-  end
-
-  love.graphics.print(text, cx + ox, cy + ox)
-end
-
 local function drawUI()
   drawTooltip(tooltip_position.x + 12, tooltip_position.y + 12)
   love.graphics.setColor(Palette.white)
@@ -338,9 +314,9 @@ local function drawUI()
   local title = GameData.resources:setDefaultFont('outfit_title_bold')
   if title then
     if GameData.phase == Phase.SELECT_DRINK then
-      centeredText('Select a drink...', -1, 200, title, 0, 0)
+      CenteredText('Select a drink...', -1, 200, title, 0, 0)
     elseif GameData.phase == Phase.END then
-      centeredText('Click to continue...', -1, 200, title, 0, 0)
+      CenteredText('Click to continue...', -1, 200, title, 0, 0)
     end
   end
   GameData.resources:setDefaultFont('outfit_regular')
@@ -360,7 +336,7 @@ local function drawUI()
   GameData.resources:setDefaultFont('outfit_title_bold')
   love.graphics.print(GameData.score, 1020, 32)
   GameData.resources:setDefaultFont('outfit_medium')
-  love.graphics.print('Objective: ' .. GameData.objective, 960, 90)
+  love.graphics.print('Objective: ' .. SCORE_OBJECTIVES[GameData.level], 960, 90)
 
 
 
@@ -374,6 +350,10 @@ end
 
 
 function GameScene:draw()
+  love.graphics.translate(
+    love.math.random(-trauma, trauma),
+    love.math.random(-trauma, trauma)
+  )
   local mx, my = drawVendingMachine()
   drawInside()
   love.graphics.setCanvas()
@@ -401,6 +381,7 @@ function GameScene:mousepressed(x, y, button)
           end
           GameData.money = GameData.money - drinkData.price
           slot:startStuck()
+          trauma = 5
           GameData.resources:playAudio('coin')
         end
       end
@@ -419,7 +400,10 @@ function GameScene:mousepressed(x, y, button)
       end
     end
   elseif GameData.phase == Phase.END then
-    ChangeScene(Screens.results)
+    if GameData.score > SCORE_OBJECTIVES[GameData.level] then
+      self:restart()
+      ChangeScene(Screens.results)
+    end
   end
 end
 
@@ -499,6 +483,19 @@ function GameScene:drinkFalled(drink)
     GameData.phase = Phase.END
     resetCombos()
   end
+end
+
+function GameScene:restart()
+  resetCombos()
+  GameData.drinks = {}
+  GameData.lastDrinkColor = nil
+  GameData.lastDrinkType = nil
+  self:fillMachine(8, 6)
+
+
+  startButton = Button.new(32, 32, 'Start', function()
+    GameData.phase = Phase.SELECT_DRINK
+  end)
 end
 
 return GameScene
