@@ -102,6 +102,15 @@ function Drink:explode()
   self:remove()
 end
 
+local bounceTimer = 0.0
+
+function Drink:bounced()
+  if self.enabled and not self.flying and self.main and bounceTimer < 0.0 then
+    AddToCombo('bounce')
+    bounceTimer = 0.5
+  end
+end
+
 function Drink:update(dt)
   if self.enabled then
     if self.main then
@@ -158,14 +167,18 @@ function Drink:update(dt)
 
   if self.position.y < 0 then
     self.position.y = 0
+    self.velocity.y = 0
   end
 
+  bounceTimer = bounceTimer - dt
   if self.position.x < 16 and self.velocity.x < 0 then
     GameData.resources:playAudio('impact_metal')
     self.velocity.x = -self.velocity.x
+    self:bounced()
     self.angularVelocity = self.angularVelocity + 5
   elseif self.position.x > MachineInnerSize.x - 16 and self.velocity.x > 0 then
     GameData.resources:playAudio('impact_metal')
+    self:bounced()
     self.velocity.x = -self.velocity.x
     self.angularVelocity = self.angularVelocity - 5
   end

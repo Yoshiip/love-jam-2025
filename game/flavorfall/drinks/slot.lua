@@ -97,6 +97,9 @@ end
 
 function Slot:exploded()
   self.drinks[1].stuck = false
+  self.drinks[1].flying = true
+  self.drinks[1].velocity.y = -20
+  self.drinks[1].velocity.x = love.math.random(-10, 10)
   self.drinks[1].enabled = true
 end
 

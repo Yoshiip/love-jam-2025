@@ -477,7 +477,7 @@ local function clearCombo(id)
 end
 
 ---@param comboId string
-local function addToCombo(comboId)
+function AddToCombo(comboId)
   if GameData.combos[comboId].timeLeft < 0 then
     GameData.combos[comboId].value = 0
   end
@@ -485,19 +485,18 @@ local function addToCombo(comboId)
   GameData.combos[comboId].timeLeft = GameData.combos[comboId].maxTimeLeft
 end
 
-
 ---@param drinkData DrinkData
 local function updateCombos(drinkData)
-  addToCombo('default')
+  AddToCombo('default')
 
 
   if drinkData.color == GameData.lastDrinkColor then
-    addToCombo('sameColor')
+    AddToCombo('sameColor')
   else
     clearCombo('sameColor')
   end
   if drinkData.type == GameData.lastDrinkType then
-    addToCombo('sameType')
+    AddToCombo('sameType')
   else
     clearCombo('sameType')
   end
