@@ -8,7 +8,7 @@
 ---@field price number
 ---@field baseScore number
 ---@field fuel number
----@field rarity number
+---@field speed number
 ---@field minLevel? number
 
 ---@type table<string, DrinkData>
@@ -19,7 +19,7 @@ local DRINKS_DATA = {
     type = 'plain',
     color = 'clear',
     baseScore = 10,
-    rarity = 1,
+    speed = 2,
     fuel = 0,
     price = 2,
   },
@@ -30,7 +30,7 @@ local DRINKS_DATA = {
     baseScore = 12,
     fuel = 0,
     price = 3,
-    rarity = 0,
+    speed = 2,
   },
   orangeWater = {
     name = "Orange Water",
@@ -39,7 +39,7 @@ local DRINKS_DATA = {
     baseScore = 15,
     fuel = 0,
     price = 3,
-    rarity = 0,
+    speed = 2,
   },
   hibiscusWater = {
     name = "Hibiscus",
@@ -48,7 +48,7 @@ local DRINKS_DATA = {
     baseScore = 25,
     fuel = 0,
     price = 2,
-    rarity = 4,
+    speed = 3,
     minLevel = 2
   },
   -- SPARKLINGS
@@ -58,17 +58,17 @@ local DRINKS_DATA = {
     color = 'clear',
     baseScore = 20,
     fuel = 50,
-    price = 4,
-    rarity = 0,
+    price = 3,
+    speed = 4,
   },
   sparklingApple = {
     name = "Apple Sparkling",
-    type = 'plain',
+    type = 'sparkling',
     color = 'green',
     baseScore = 25,
     fuel = 60,
-    price = 5,
-    rarity = 0,
+    price = 4,
+    speed = 4,
   },
   sparklingOrange = {
     name = "Sparkling Orange",
@@ -77,7 +77,8 @@ local DRINKS_DATA = {
     baseScore = 30,
     fuel = 65,
     price = 5,
-    rarity = 0,
+    speed = 4,
+    minLevel = 2,
   },
   sparklingRaspberry = {
     name = "Sparkling Raspberry",
@@ -86,8 +87,49 @@ local DRINKS_DATA = {
     baseScore = 50,
     fuel = 75,
     price = 6,
-    rarity = 3,
-    minLevel = 2
+    speed = 4,
+    minLevel = 3
+  },
+  -- SMOOTHIES
+  cocoSmoothie = {
+    name = "Coco Smoothie",
+    type = 'smoothie',
+    color = 'clear',
+    baseScore = 50,
+    fuel = 0,
+    price = 2,
+    speed = 6,
+    minLevel = 3,
+  },
+  mangoSmoothie = {
+    name = "Mango Smoothie",
+    type = 'smoothie',
+    color = 'orange',
+    baseScore = 60,
+    fuel = 0,
+    price = 2,
+    speed = 6,
+    minLevel = 3,
+  },
+  kiwiSmoothie = {
+    name = "Kiwi Smoothie",
+    type = 'smoothie',
+    color = 'green',
+    baseScore = 70,
+    fuel = 0,
+    price = 2,
+    speed = 6,
+    minLevel = 4,
+  },
+  berrySmoothie = {
+    name = "Berry Smoothie",
+    type = 'smoothie',
+    color = 'red',
+    fuel = 0,
+    baseScore = 100,
+    price = 6,
+    speed = 6,
+    minLevel = 5
   },
 
   -- SODAS
@@ -98,7 +140,7 @@ local DRINKS_DATA = {
   --   baseScore = 20,
   --   fuel = 10,
   --   price = 2,
-  --   rarity = 0,
+  --   speed = 0,
   -- },
   -- citrusSoda = {
   --   name = "Citrus Soda",
@@ -107,7 +149,7 @@ local DRINKS_DATA = {
   --   baseScore = 15,
   --   fuel = 0,
   --   price = 2,
-  --   rarity = 0,
+  --   speed = 0,
   -- },
   -- mintSoda = {
   --   name = "Mint Soda",
@@ -116,7 +158,7 @@ local DRINKS_DATA = {
   --   baseScore = 15,
   --   fuel = 0,
   --   price = 2,
-  --   rarity = 0,
+  --   speed = 0,
   -- },
   -- pomegranateSoda = {
   --   name = "Pomegranate Soda",
@@ -125,45 +167,7 @@ local DRINKS_DATA = {
   --   baseScore = 15,
   --   fuel = 75,
   --   price = 5,
-  --   rarity = 3,
-  --   minLevel = 2
-  -- },
-  -- -- SMOOTHIES
-  -- cocoSmoothie = {
-  --   name = "Coco Smoothie",
-  --   type = 'smoothie',
-  --   color = 'clear',
-  --   baseScore = 50,
-  --   fuel = 10,
-  --   price = 2,
-  --   rarity = 0,
-  -- },
-  -- mangoSmoothie = {
-  --   name = "Mango Smoothie",
-  --   type = 'smoothie',
-  --   color = 'orange',
-  --   baseScore = 50,
-  --   fuel = 0,
-  --   price = 2,
-  --   rarity = 0,
-  -- },
-  -- kiwiSmoothie = {
-  --   name = "Kiwi Smoothie",
-  --   type = 'smoothie',
-  --   color = 'green',
-  --   baseScore = 50,
-  --   fuel = 0,
-  --   price = 2,
-  --   rarity = 0,
-  -- },
-  -- berrySmoothie = {
-  --   name = "Berry Smoothie",
-  --   type = 'smoothie',
-  --   color = 'red',
-  --   fuel = 0,
-  --   baseScore = 75,
-  --   price = 6,
-  --   rarity = 4,
+  --   speed = 3,
   --   minLevel = 2
   -- },
 }

@@ -15,6 +15,8 @@ local GameScene = {
 ---@class Particle
 ---@field x number
 ---@field y number
+---@field angle number?
+---@field color string?
 ---@field time number
 
 ---@class Particles
@@ -55,15 +57,6 @@ function GameScene:new()
 end
 
 function GameScene:start()
-  GameData.phase = Phase.BUY
-  GameData.score = 0
-  GameData.money = 40
-  GameData.drinks = {}
-  GameData.slots = {}
-  -- local music = GameData.resources:getMusic('ingame')
-  -- if music then
-  --   love.audio.play(music)
-  -- end
   self:restart()
 end
 
@@ -87,23 +80,33 @@ function GameScene:fillMachine(rows, cols)
   MachineCanvas = love.graphics.newCanvas(MachineInnerSize.x, MachineInnerSize.y)
 
   local keys = {}
-  for key in pairs(DrinksData) do
-    table.insert(keys, key)
+  for key, value in pairs(DrinksData) do
+    local minLevel = 1
+    if value.minLevel then
+      minLevel = value.minLevel
+    end
+    if GameData.level >= minLevel then
+      table.insert(keys, key)
+    end
   end
 
 
-  for ry = 0, cols, 1 do
+  for ry = 0, cols - 1, 1 do
     local rows_count = rows
     if ry % 2 == 1 then
-      rows_count = rows_count - 2
+      rows_count = rows_count - 1
     end
-    for rx = 0, rows_count do
+    for rx = 0, rows_count - 1 do
       local x = rx * SLOT_DEFAULT_SIZE.x
       local y = ry * SLOT_DEFAULT_SIZE.y
       if ry % 2 == 1 then
         x = x + SLOT_DEFAULT_SIZE.x / 2
       end
-      local randomKey = keys[love.math.random(1, #keys)]
+
+      local randomKey = ''
+      if love.math.random(5) > 1 then
+        randomKey = keys[love.math.random(1, #keys)]
+      end
       local drinksCount = love.math.random(3, 5)
       self.totalDrinks = self.totalDrinks + 1
       local slot = Slot.new(x, y, randomKey, drinksCount, SLOT_DEFAULT_SIZE.x, SLOT_DEFAULT_SIZE.y)
@@ -117,10 +120,12 @@ end
 function GameScene:update(dt)
   trauma = Lerp(trauma, 0, dt * 10.0)
 
+  print(GameData.phase)
+
   GameData.hoveredSlot = nil
   for _, slot in ipairs(GameData.slots) do
     slot:update(dt)
-    if slot:isHovered() then
+    if #slot.drinks > 0 and slot:isHovered() then
       GameData.hoveredSlot = slot
     end
   end
@@ -152,23 +157,35 @@ function GameScene:update(dt)
       table.remove(Particles.fuel, i)
     end
   end
+
+  for i = #Particles.explosion, 1, -1 do
+    local particle = Particles.explosion[i]
+    particle.x = particle.x + math.cos(math.rad(particle.angle)) * 5 * dt
+    particle.y = particle.y + math.sin(math.rad(particle.angle)) * 5 * dt
+    particle.time = particle.time - dt
+    if particle.time < 0 then
+      table.remove(Particles.explosion, i)
+    end
+  end
 end
 
 ---@param x number
 ---@param y number
 local function drawLCDScreen(x, y)
-  GameData.resources:setDefaultFont('lcd')
+  GameData.resources:setDefaultFont("lcd_small")
   love.graphics.setColor(Palette.limeGreen)
-  if GameData.phase == Phase.BUY then
-    if GameData.hoveredSlot then
-      local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
-      love.graphics.print(drinkData.name, x + 16, y + 16)
-      love.graphics.print('Price: ' .. drinkData.price, x + 16, y + 54)
-    end
-  else
-    love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
-    love.graphics.print('Objective ' .. SCORE_OBJECTIVES[GameData.level], x + 16, y + 54)
-  end
+  love.graphics.print('Score       ' .. GameData.score, x + 24, y + 8)
+  love.graphics.print('Objective ' .. SCORE_OBJECTIVES[GameData.level], x + 24, y + 32)
+  -- if GameData.phase == Phase.BUY then
+  --   if GameData.hoveredSlot then
+  --     local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
+  --     love.graphics.print(drinkData.name, x + 16, y + 16)
+  --     love.graphics.print('Price: ' .. drinkData.price, x + 16, y + 54)
+  --   end
+  -- else
+  --   love.graphics.print('Score ' .. GameData.score, x + 16, y + 16)
+  --   love.graphics.print('Objective ' .. SCORE_OBJECTIVES[GameData.level], x + 16, y + 54)
+  -- end
 end
 
 
@@ -182,9 +199,10 @@ local function drawVendingMachine()
   local rightDecoration = GameData.resources:getTexture('rightDecoration')
   if rightDecoration then
     love.graphics.setColor(Palette.white)
-    love.graphics.draw(rightDecoration, x + w - 240, y + 16, 0, 0.6, 0.6)
+    love.graphics.draw(rightDecoration, x + w - 240, y + 16, 0, 0.7, 0.7)
   end
-  love.graphics.print('Level ' .. GameData.level .. '/6', x, y)
+  GameData.resources:setDefaultFont('outfit_bold')
+  love.graphics.print('Level ' .. GameData.level .. '/6', 32, 32)
   drawLCDScreen(x + MACHINE_CANVAS_SIZE.x, y + VendingMachinePadding.top)
 
 
@@ -202,6 +220,12 @@ local function drawParticles()
     love.graphics.setColor(ColorWithAlpha(Palette.white, particle.time))
     love.graphics.circle("fill", particle.x, particle.y, 20 * particle.time)
   end
+
+  for _, particle in ipairs(Particles.explosion) do
+    love.graphics.setColor(ColorWithAlpha(Palette[particle.color], particle.time))
+    love.graphics.circle("fill", particle.x, particle.y, 30 * particle.time)
+  end
+
   love.graphics.setColor(Palette.white)
 end
 
@@ -240,7 +264,7 @@ local function drawInside()
 end
 
 
-local TOOLTIP_SIZE = { x = 240, y = 120 }
+local TOOLTIP_SIZE = { x = 280, y = 160 }
 
 
 ---@param x number
@@ -263,20 +287,30 @@ local function drawTooltip(x, y)
     end
     GameData.resources:setDefaultFont("outfit_regular")
     local ty = y
-    love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.3))
+    love.graphics.setColor(ColorWithAlpha(Palette.darkMagenta, 0.6))
     love.graphics.rectangle("fill", x, ty, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     love.graphics.setColor(Palette.white)
     love.graphics.setLineWidth(2)
     love.graphics.rectangle('line', x, ty, TOOLTIP_SIZE.x, TOOLTIP_SIZE.y, 12, 12)
     local drinkData = DrinksData[GameData.hoveredSlot.drinkId]
-    love.graphics.print(drinkData.name, x + 16, ty + 16)
-    ty = ty + 48
-    love.graphics.print('Value: ' .. drinkData.baseScore, x + 16, ty)
-    drawBadge(drinkData.type, x + 16, y - 16, 'white', 'darkPurpleBlack')
-    drawBadge('x' .. #GameData.hoveredSlot.drinks .. ' left', x + 128, y - 16, 'white', 'darkPurpleBlack')
+    ty = ty + 16
+    love.graphics.print(drinkData.name, x + 16, ty)
+    ty = ty + 32
+    if GameData.money >= drinkData.price then
+      love.graphics.print('Click to jam (' .. drinkData.price .. '$)', x + 16, ty)
+    else
+      love.graphics.setColor(ColorWithAlpha(Palette.white, 0.8))
+      love.graphics.print('Not enough money! (' .. drinkData.price .. '$)', x + 16, ty)
+    end
+    love.graphics.setColor(Palette.white)
+    ty = ty + 32
+
+    love.graphics.print('Value: ' .. drinkData.baseScore .. 'points', x + 16, ty)
+    ---@type table<DrinkType, string>
+    drawBadge('x' .. #GameData.hoveredSlot.drinks .. ' left', x + 180, y - 16, 'white', 'darkPurpleBlack')
     ty = ty + 56
+    drawBadge(Capitalize(drinkData.type), x + 16, ty, DrinkTypeColors[drinkData.type], 'white')
     if drinkData.type == 'sparkling' then
-      drawBadge('Sparkling', x + 16, ty, 'goldenrod', 'white')
       drawBadge('Fuel: ' .. drinkData.fuel .. '%', x + 140, ty, 'goldenrod', 'white')
     end
   end
@@ -308,7 +342,9 @@ local function drawCombos(x, y)
 end
 
 local function drawUI()
-  drawTooltip(tooltip_position.x + 12, tooltip_position.y + 12)
+  if GameData.phase < 3 then
+    drawTooltip(tooltip_position.x + 12, tooltip_position.y + 12)
+  end
   love.graphics.setColor(Palette.white)
 
   local title = GameData.resources:setDefaultFont('outfit_title_bold')
@@ -316,12 +352,18 @@ local function drawUI()
     if GameData.phase == Phase.SELECT_DRINK then
       CenteredText('Select a drink...', -1, 200, title, 0, 0)
     elseif GameData.phase == Phase.END then
+      love.graphics.setColor(ColorWithAlpha(Palette.darkPurpleBlack, 0.5))
+      love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+      love.graphics.setColor(Palette.white)
       CenteredText('Click to continue...', -1, 200, title, 0, 0)
     end
   end
-  GameData.resources:setDefaultFont('outfit_regular')
+  local font = GameData.resources:setDefaultFont('outfit_regular')
 
-  love.graphics.print(GameData.money .. "$", 4, 4)
+
+  if font then
+    CenteredText('Money: ' .. GameData.money .. "$", -1, 16, font, 0, 0)
+  end
 
   if GameData.phase == Phase.SIMULATION and GameData.mainDrink ~= nil then
     GameData.resources:setDefaultFont('outfit_medium')
@@ -331,14 +373,6 @@ local function drawUI()
   end
 
   drawCombos(32, 200)
-
-
-  GameData.resources:setDefaultFont('outfit_title_bold')
-  love.graphics.print(GameData.score, 1020, 32)
-  GameData.resources:setDefaultFont('outfit_medium')
-  love.graphics.print('Objective: ' .. SCORE_OBJECTIVES[GameData.level], 960, 90)
-
-
 
   if GameData.phase == Phase.BUY and startButton then
     startButton:draw()
@@ -369,7 +403,7 @@ end
 function GameScene:mousepressed(x, y, button)
   if GameData.phase == Phase.BUY then
     for _, slot in ipairs(GameData.slots) do
-      if slot:isHovered() then
+      if #slot.drinks > 0 and slot:isHovered() then
         local drinkData = DrinksData[slot.drinkId]
         if slot.stuck then
           GameData.money = GameData.money + drinkData.price
@@ -388,21 +422,30 @@ function GameScene:mousepressed(x, y, button)
     end
   elseif GameData.phase == Phase.SELECT_DRINK then
     for _, slot in ipairs(GameData.slots) do
-      if slot:isHovered() then
+      if #slot.drinks > 0 and slot:isHovered() then
         local drinkData = DrinksData[slot.drinkId]
         if not slot.stuck then
           local drink = slot.drinks[1]
           drink.enabled = true
           drink.main = true
           GameData.mainDrink = drink
+          GameData.resources:stopMusic('buy')
+          GameData.resources:playMusic('ingame')
           GameData.phase = Phase.SIMULATION
         end
       end
     end
   elseif GameData.phase == Phase.END then
+    GameData.resources:stopMusic('ingame')
     if GameData.score > SCORE_OBJECTIVES[GameData.level] then
+      GameData.level = GameData.level + 1
       self:restart()
-      ChangeScene(Screens.results)
+    else
+      self:restart()
+      -- local font = GameData.resources:setDefaultFont('outfit_title_bold')
+      -- if font then
+      --   CenteredText('You did not reach the objective.', -1, -1, font, 0, -64)
+      -- end
     end
   end
 end
@@ -479,21 +522,33 @@ function GameScene:drinkFalled(drink)
   GameData.lastDrinkColor = drinkData.color
   GameData.lastDrinkType = drinkData.type
   if drink.main then
-    print("Main est failé")
+    GameData.mainDrink = nil
     GameData.phase = Phase.END
     resetCombos()
   end
 end
 
 function GameScene:restart()
-  resetCombos()
+  GameData.phase = Phase.BUY
+  GameData.score = 0
+  GameData.money = 25 + GameData.level * 5
+  GameData.drinks = {}
+  GameData.slots = {}
+  GameData.phase = Phase.BUY
   GameData.drinks = {}
   GameData.lastDrinkColor = nil
   GameData.lastDrinkType = nil
-  self:fillMachine(8, 6)
+  resetCombos()
+  if GameData.level > 3 then
+    self:fillMachine(10, 7)
+  else
+    self:fillMachine(8, 6)
+  end
+
+  GameData.resources:playMusic('buy')
 
 
-  startButton = Button.new(32, 32, 'Start', function()
+  startButton = Button.new(480, 670, 'Start simulation!', function()
     GameData.phase = Phase.SELECT_DRINK
   end)
 end

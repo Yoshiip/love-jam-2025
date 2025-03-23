@@ -1,6 +1,7 @@
 require('flavorfall.utils.math')
 local collision = require('flavorfall.utils.collisions')
 local DrinksData = require('flavorfall.drinks_data')
+local vector = require('flavorfall.utils.vector')
 
 ---@class Drink
 ---@field slot Slot
@@ -14,6 +15,7 @@ local Drink = {
   angularAcceleration = 0,
   defaultQuad = love.graphics.newQuad(0, 0, 128, 256, 256, 256),
   stuckQuad = love.graphics.newQuad(128, 0, 128, 128, 256, 256),
+  flying = false,
   main = false,
   enabled = false,
   stuck = false,
@@ -51,16 +53,17 @@ function Drink:center()
 end
 
 function Drink:handleCollisions()
-  if self.enabled and not self.stuck then
+  if not self.flying and self.enabled and not self.stuck then
     local x, y = self:center()
     for _, drink in pairs(GameData.drinks) do
       local ox, oy = drink:center()
-      if drink.stuck and not drink.enabled and collision.collisionCircleRectangle(ox, oy, COLLISION_RADIUS, x, y, 128, 128) then
+      if drink.stuck and not drink.enabled and collision.collisionCircleRectangle(ox, oy, COLLISION_RADIUS, x - 64, y, 128, 128) then
         local impactX = x - ox
         local impactStrength = Clamp(impactX, -5, 5)
         self.velocity.y = -5
         self.velocity.x = impactStrength
         self.angularVelocity = self.angularVelocity + impactStrength * 0.1
+        GameData.resources:playAudio('impact')
         drink:detach()
       end
     end
@@ -69,39 +72,77 @@ end
 
 function Drink:detach()
   self.enabled = true
+  if self.fuelLeft ~= nil then
+    self.stuck = false
+    self.flying = true
+  end
   self.slot:detached(self)
+end
+
+local EXPLOSION_RADIUS = 200
+
+function Drink:explode()
+  local cx, cy = self:center()
+
+  for _, slot in ipairs(GameData.slots) do
+    local sx, sy = slot:center()
+    if #slot.drinks > 0 and vector.distance(cx, cy, sx, sy) < EXPLOSION_RADIUS then
+      slot:exploded()
+    end
+  end
+  for i = 1, 16, 1 do
+    table.insert(Particles.explosion, {
+      x = cx,
+      y = cy,
+      time = 1,
+      angle = love.math.random(0, 360),
+      color = DrinkColorPalette[DrinksData[self.id].color]
+    })
+  end
+  self:remove()
 end
 
 function Drink:update(dt)
   if self.enabled then
-    local ANGULAR_ACCEL = 360
-    if love.keyboard.isDown("left") then
-      self.angularAcceleration = self.angularAcceleration - ANGULAR_ACCEL
-    elseif love.keyboard.isDown("right") then
-      self.angularAcceleration = self.angularAcceleration + ANGULAR_ACCEL
+    if self.main then
+      local ANGULAR_ACCEL = 360
+      if love.keyboard.isDown("left") then
+        self.angularAcceleration = self.angularAcceleration - ANGULAR_ACCEL
+      elseif love.keyboard.isDown("right") then
+        self.angularAcceleration = self.angularAcceleration + ANGULAR_ACCEL
+      end
+
+      if love.keyboard.isDown('space') and self.fuelLeft > 0 then
+        local propulsionAngle = math.rad(self.rotation + 90)
+        local dir = {
+          x = math.cos(propulsionAngle),
+          y = math.sin(propulsionAngle)
+        }
+        local propulsionStrength = 18
+        particleTimer = particleTimer - dt
+        if particleTimer < 0.0 then
+          local cx, cy = self:center()
+          table.insert(Particles.fuel, {
+            x = cx,
+            y = cy,
+            time = 1,
+          })
+          particleTimer = maxParticleTimer
+        end
+        self.velocity.x = self.velocity.x + dir.x * propulsionStrength * dt
+        self.velocity.y = self.velocity.y + dir.y * propulsionStrength * dt
+        self.fuelLeft = self.fuelLeft - dt * 10
+      end
+      -- elseif self.flying then
+      --   if self.fuelLeft > 0 then
+      --     self.velocity.y = self.velocity.y - 10 * dt
+      --     self.fuelLeft = self.fuelLeft - dt * 15
+      --   else
+      --     self:explode()
+      --   end
     end
 
-    if love.keyboard.isDown('space') and self.fuelLeft > 0 then
-      local propulsionAngle = math.rad(self.rotation + 90)
-      local dir = {
-        x = math.cos(propulsionAngle),
-        y = math.sin(propulsionAngle)
-      }
-      local propulsionStrength = 18
-      particleTimer = particleTimer - dt
-      if particleTimer < 0.0 then
-        local cx, cy = self:center()
-        table.insert(Particles.fuel, {
-          x = cx,
-          y = cy,
-          time = 1,
-        })
-        particleTimer = maxParticleTimer
-      end
-      self.velocity.x = self.velocity.x + dir.x * propulsionStrength * dt
-      self.velocity.y = self.velocity.y + dir.y * propulsionStrength * dt
-      self.fuelLeft = self.fuelLeft - dt * 10
-    end
+
 
     self.angularVelocity = self.angularVelocity + self.angularAcceleration * dt
     local ANGULAR_DAMPING = 1
@@ -115,6 +156,10 @@ function Drink:update(dt)
     self.velocity.y = self.velocity.y + GRAVITY * dt
   end
 
+  if self.position.y < 0 then
+    self.position.y = 0
+  end
+
   if self.position.x < 16 and self.velocity.x < 0 then
     GameData.resources:playAudio('impact_metal')
     self.velocity.x = -self.velocity.x
@@ -124,6 +169,7 @@ function Drink:update(dt)
     self.velocity.x = -self.velocity.x
     self.angularVelocity = self.angularVelocity - 5
   end
+
 
   if self.position.y > MachineInnerSize.y + 200 then
     GetScene():drinkFalled(self)

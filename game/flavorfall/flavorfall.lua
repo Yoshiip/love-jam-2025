@@ -6,7 +6,7 @@ Phase = {
   BUY = 1,
   SELECT_DRINK = 2,
   SIMULATION = 3,
-  END = 3
+  END = 4
 }
 
 ---@class Combo
@@ -98,7 +98,6 @@ local bgColor = BACKGROUND_COLORS[1]
 local ResourceManager = require('flavorfall.utils.resource_manager')
 local MenuScene = require("flavorfall.scenes.menu_scene")
 local GameScene = require("flavorfall.scenes.game_scene")
-local ResultsScene = require("flavorfall.scenes.results_scene")
 local EndScene = require("flavorfall.scenes.end_scene")
 
 local CurrentScreen = 1
@@ -108,15 +107,13 @@ local mouseVelocity = { x = 0, y = 0 }
 Screens = {
   menu = 1,
   game = 2,
-  results = 3,
-  gameOver = 4,
+  gameEnd = 3,
 }
 
 ---@type Scene[]
 local Scenes = {
   MenuScene:new(),
   GameScene:new(),
-  ResultsScene:new(),
   EndScene:new()
 }
 
@@ -183,13 +180,19 @@ local lastMouse = { x = 0, y = 0 }
 
 function UpdateGame(dt)
   GetScene():update(dt)
+  bgColor = LerpColor(bgColor, BACKGROUND_COLORS[GameData.level], dt)
 
   mouseVelocity.x = mouseVelocity.x + (love.mouse.getX() - lastMouse.x) * dt
   mouseVelocity.y = mouseVelocity.y + (love.mouse.getY() - lastMouse.y) * dt
   lastMouse.x, lastMouse.y = love.mouse.getPosition()
 
+  if GameData.mainDrink ~= nil then
+    mouseVelocity.x = mouseVelocity.x + GameData.mainDrink.velocity.x * 2 * dt
+    mouseVelocity.y = mouseVelocity.y + GameData.mainDrink.velocity.y * 2 * dt
+  end
   mouseVelocity.x = Lerp(mouseVelocity.x, 0, dt)
   mouseVelocity.y = Lerp(mouseVelocity.y, 0, dt)
+
 
   squareBg.x = (squareBg.x + mouseVelocity.x * 0.2) + dt * 4
   squareBg.y = (squareBg.y + mouseVelocity.y * 0.2) + dt * 4

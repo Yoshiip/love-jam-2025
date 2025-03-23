@@ -13,6 +13,10 @@ function EndScene:update()
 end
 
 function EndScene:draw()
+  local font = GameData.resources:setDefaultFont('outfit_title_bold')
+  if font then
+    CenteredText('Congratulations!', -1, -1, font, 0, 0)
+  end
 end
 
 function EndScene:mousepressed(x, y, button)

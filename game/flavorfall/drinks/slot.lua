@@ -1,5 +1,5 @@
 local Drink = require("flavorfall.drinks.drink")
-
+local DRinksData = require('flavorfall.drinks_data')
 ---@class Slot
 ---@field drinks Drink[]
 local Slot = {
@@ -25,12 +25,14 @@ function Slot.new(x, y, drinkId, count, width, height)
 
   local spacing = 12
 
-  for i = 0, count, 1 do
-    local drink = Drink.new(x + 32, y - i * spacing + 48, drinkId)
-    drink.order = i
-    drink.slot = self
-    table.insert(GameData.drinks, drink)
-    table.insert(self.drinks, drink)
+  if drinkId ~= '' then
+    for i = 0, count, 1 do
+      local drink = Drink.new(x + 32, y - i * spacing + 48, drinkId)
+      drink.order = i
+      drink.slot = self
+      table.insert(GameData.drinks, drink)
+      table.insert(self.drinks, drink)
+    end
   end
   return self
 end
@@ -38,7 +40,7 @@ end
 function Slot:update(dt)
   if #self.drinks > 0 and self.stuck and self.move then
     for _, d in ipairs(self.drinks) do
-      d.order = d.order - dt
+      d.order = d.order - dt / DRinksData[self.drinkId].speed
     end
     if self.drinks[1].order < 0 then
       self.drinks[1].stuck = true
@@ -61,6 +63,10 @@ function Slot:draw()
     love.graphics.setLineWidth(6)
     love.graphics.rectangle("line", x, y, 128 - 6, 256 - 6)
   end
+end
+
+function Slot:center()
+  return self.position.x + 64, self.position.y + 128
 end
 
 function Slot:drawLabel()
@@ -87,6 +93,11 @@ function Slot:isHovered()
   local hovered = inside_x and inside_y
   self.hovered = hovered
   return hovered
+end
+
+function Slot:exploded()
+  self.drinks[1].stuck = false
+  self.drinks[1].enabled = true
 end
 
 function Slot:startStuck()

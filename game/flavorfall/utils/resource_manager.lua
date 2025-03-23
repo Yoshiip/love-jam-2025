@@ -10,6 +10,7 @@ ResourceManager.__index = ResourceManager
 ---| '"outfit_medium"'
 ---| '"outfit_regular"'
 ---| '"lcd"'
+---| '"lcd_small"'
 
 local RESOURCE_PATHS = {
   textures = {
@@ -19,22 +20,29 @@ local RESOURCE_PATHS = {
     rightDecoration = 'flavorfall/images/right_decoration.png',
     slot = 'flavorfall/images/slot.png',
     -- DRINKS
-    hibiscusWater = 'flavorfall/images/drinks/hibiscusWater.png',
-    mintWater = 'flavorfall/images/drinks/mintWater.png',
-    orangeSoda = 'flavorfall/images/drinks/orangeSoda.png',
-    orangeWater = 'flavorfall/images/drinks/orangeWater.png',
     stillWater = 'flavorfall/images/drinks/stillWater.png',
+    mintWater = 'flavorfall/images/drinks/mintWater.png',
+    orangeWater = 'flavorfall/images/drinks/orangeWater.png',
+    hibiscusWater = 'flavorfall/images/drinks/hibiscusWater.png',
+
+    sparklingWater = 'flavorfall/images/drinks/sparklingWater.png',
     sparklingApple = 'flavorfall/images/drinks/sparklingApple.png',
     sparklingOrange = 'flavorfall/images/drinks/sparklingOrange.png',
     sparklingRaspberry = 'flavorfall/images/drinks/sparklingRaspberry.png',
-    sparklingWater = 'flavorfall/images/drinks/sparklingWater.png',
+
+    cocoSmoothie = 'flavorfall/images/drinks/cocoSmoothie.png',
+    kiwiSmoothie = 'flavorfall/images/drinks/kiwiSmoothie.png',
+    mangoSmoothie = 'flavorfall/images/drinks/mangoSmoothie.png',
+    berrySmoothie = 'flavorfall/images/drinks/berrySmoothie.png',
   },
   musics = {
+    buy = 'flavorfall/musics/buy.mp3',
     ingame = 'flavorfall/musics/music.mp3'
   },
   sounds = {
     fuel = 'flavorfall/sfx/fuel.mp3',
     coin = 'flavorfall/sfx/coin.mp3',
+    impact = 'flavorfall/sfx/impact.wav',
     impact_metal = 'flavorfall/sfx/impact_metal.mp3',
   },
   fonts = {
@@ -57,7 +65,12 @@ local RESOURCE_PATHS = {
     lcd = {
       path = 'flavorfall/fonts/lcd.otf',
       size = 32,
+    },
+    lcd_small = {
+      path = 'flavorfall/fonts/lcd.otf',
+      size = 22,
     }
+
 
   }
 }
@@ -157,6 +170,8 @@ function ResourceManager:loadMusics()
 
     if success then
       musics[name] = result
+      result:setVolume(0.2)
+      result:setLooping(true)
     else
       print("Error loading audio '" .. name .. "': " .. tostring(result))
     end
@@ -212,7 +227,31 @@ end
 function ResourceManager:playAudio(name)
   local source = GameData.resources:getAudio(name)
   if source then
+    love.audio.stop(source)
     love.audio.play(source)
+  end
+end
+
+function ResourceManager:stopAudio(name)
+  local source = GameData.resources:getAudio(name)
+  if source then
+    love.audio.stop(source)
+  end
+end
+
+function ResourceManager:playMusic(name)
+  local source = GameData.resources:getMusic(name)
+  print(source)
+  if source then
+    love.audio.stop(source)
+    love.audio.play(source)
+  end
+end
+
+function ResourceManager:stopMusic(name)
+  local source = GameData.resources:getMusic(name)
+  if source then
+    love.audio.stop(source)
   end
 end
 
