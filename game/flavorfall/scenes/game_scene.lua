@@ -1,7 +1,7 @@
-local Slot = require('game.drinks.slot')
-local DrinksData = require('Gimmedrinks.drinks_data')
-local Button = require('game.gimmedrinks.ui.button')
-local Scene = require("game.scenes.scene")
+local Slot = require('flavorfall.drinks.slot')
+local DrinksData = require('flavorfall.drinks_data')
+local Button = require('flavorfall.ui.button')
+local Scene = require("flavorfall.scenes.scene")
 
 ---@class GameScene: Scene
 local GameScene = {

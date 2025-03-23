@@ -1,5 +1,5 @@
-local Scene = require "game.scenes.scene"
-local Button = require('game.gimmedrinks.ui.button')
+local Scene = require "flavorfall.scenes.scene"
+local Button = require 'flavorfall.ui.button'
 
 local MenuScene = {}
 MenuScene.__index = MenuScene

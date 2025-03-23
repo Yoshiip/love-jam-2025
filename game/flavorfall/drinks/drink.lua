@@ -1,6 +1,6 @@
-require 'Gimmedrinks.utils.math'
-local collision = require 'gimmedrinks.utils.collisions'
-local DrinksData = require('Gimmedrinks.drinks_data')
+require('flavorfall.utils.math')
+local collision = require('flavorfall.utils.collisions')
+local DrinksData = require('flavorfall.drinks_data')
 
 ---@class Drink
 ---@field slot Slot

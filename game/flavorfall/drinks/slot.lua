@@ -1,4 +1,4 @@
-local Drink = require "game.drinks.drink"
+local Drink = require("flavorfall.drinks.drink")
 
 ---@class Slot
 ---@field drinks Drink[]

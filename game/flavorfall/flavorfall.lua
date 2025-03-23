@@ -1,5 +1,5 @@
-require "Gimmedrinks.utils.color"
-require "gimmedrinks.palette"
+require "flavorfall.utils.color"
+require "flavorfall.palette"
 
 Phase = {
   BUY = 1,
@@ -74,11 +74,11 @@ GameData = {
   resources = nil
 }
 
-local ResourceManager = require('Gimmedrinks.utils.resource_manager')
-local MenuScene = require "game.scenes.menu_scene"
-local GameScene = require "game.scenes.game_scene"
-local ResultsScene = require "game.scenes.results_scene"
-local EndScene = require "game.scenes.end_scene"
+local ResourceManager = require('flavorfall.utils.resource_manager')
+local MenuScene = require("flavorfall.scenes.menu_scene")
+local GameScene = require("flavorfall.scenes.game_scene")
+local ResultsScene = require("flavorfall.scenes.results_scene")
+local EndScene = require("flavorfall.scenes.end_scene")
 
 local CurrentScreen = 1
 

@@ -2,7 +2,7 @@
 https = nil
 local overlayStats = require("lib.overlayStats")
 local runtimeLoader = require("runtime.loader")
-require "gimmedrinks.gimmedrinks"
+require("flavorfall.flavorfall")
 
 function love.load()
   https = runtimeLoader.loadHTTPS()

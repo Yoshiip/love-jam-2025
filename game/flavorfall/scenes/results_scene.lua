@@ -1,4 +1,4 @@
-local Scene = require "game.scenes.scene"
+local Scene = require "flavorfall.scenes.scene"
 
 local ResultsScene = {}
 ResultsScene.__index = ResultsScene

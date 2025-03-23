@@ -13,46 +13,46 @@ ResourceManager.__index = ResourceManager
 
 local RESOURCE_PATHS = {
   textures = {
-    background = 'Gimmedrinks/images/background.jpg',
-    vendingMachine = 'Gimmedrinks/images/vending_machine.png',
-    pushDecoration = 'Gimmedrinks/images/push_decoration.png',
-    rightDecoration = 'Gimmedrinks/images/right_decoration.png',
-    slot = 'Gimmedrinks/images/slot.png',
+    background = 'flavorfall/images/background.jpg',
+    vendingMachine = 'flavorfall/images/vending_machine.png',
+    pushDecoration = 'flavorfall/images/push_decoration.png',
+    rightDecoration = 'flavorfall/images/right_decoration.png',
+    slot = 'flavorfall/images/slot.png',
     -- DRINKS
-    hibiscusWater = 'Gimmedrinks/images/drinks/hibiscusWater.png',
-    mintWater = 'Gimmedrinks/images/drinks/mintWater.png',
-    orangeSoda = 'Gimmedrinks/images/drinks/orangeSoda.png',
-    orangeWater = 'Gimmedrinks/images/drinks/orangeWater.png',
-    stillWater = 'Gimmedrinks/images/drinks/stillWater.png',
-    sparklingApple = 'Gimmedrinks/images/drinks/sparklingApple.png',
-    sparklingOrange = 'Gimmedrinks/images/drinks/sparklingOrange.png',
-    sparklingRaspberry = 'Gimmedrinks/images/drinks/sparklingRaspberry.png',
-    sparklingWater = 'Gimmedrinks/images/drinks/sparklingWater.png',
+    hibiscusWater = 'flavorfall/images/drinks/hibiscusWater.png',
+    mintWater = 'flavorfall/images/drinks/mintWater.png',
+    orangeSoda = 'flavorfall/images/drinks/orangeSoda.png',
+    orangeWater = 'flavorfall/images/drinks/orangeWater.png',
+    stillWater = 'flavorfall/images/drinks/stillWater.png',
+    sparklingApple = 'flavorfall/images/drinks/sparklingApple.png',
+    sparklingOrange = 'flavorfall/images/drinks/sparklingOrange.png',
+    sparklingRaspberry = 'flavorfall/images/drinks/sparklingRaspberry.png',
+    sparklingWater = 'flavorfall/images/drinks/sparklingWater.png',
   },
   sounds = {
-    fuel = 'Gimmedrinks/sfx/fuel.mp3',
-    coin = 'Gimmedrinks/sfx/coin.mp3',
-    impact_metal = 'Gimmedrinks/sfx/impact_metal.mp3',
+    fuel = 'flavorfall/sfx/fuel.mp3',
+    coin = 'flavorfall/sfx/coin.mp3',
+    impact_metal = 'flavorfall/sfx/impact_metal.mp3',
   },
   fonts = {
     outfit_title_bold = {
-      path = 'Gimmedrinks/fonts/outfit_bold.ttf',
+      path = 'flavorfall/fonts/outfit_bold.ttf',
       size = 48,
     },
     outfit_bold = {
-      path = 'Gimmedrinks/fonts/outfit_bold.ttf',
+      path = 'flavorfall/fonts/outfit_bold.ttf',
       size = 32,
     },
     outfit_medium = {
-      path = 'Gimmedrinks/fonts/outfit_medium.ttf',
+      path = 'flavorfall/fonts/outfit_medium.ttf',
       size = 28,
     },
     outfit_regular = {
-      path = 'Gimmedrinks/fonts/outfit_regular.ttf',
+      path = 'flavorfall/fonts/outfit_regular.ttf',
       size = 24,
     },
     lcd = {
-      path = 'Gimmedrinks/fonts/lcd.otf',
+      path = 'flavorfall/fonts/lcd.otf',
       size = 32,
     }
 
