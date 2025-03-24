@@ -294,11 +294,18 @@ local function drawTooltip(x, y)
     ty = ty + 16
     love.graphics.print(drinkData.name, x + 16, ty)
     ty = ty + 32
-    if GameData.money >= drinkData.price then
-      love.graphics.print('Click to jam (' .. drinkData.price .. '$)', x + 16, ty)
-    else
-      love.graphics.setColor(ColorWithAlpha(Palette.white, 0.8))
-      love.graphics.print('Not enough money! (' .. drinkData.price .. '$)', x + 16, ty)
+    if GameData.phase == Phase.BUY then
+      if GameData.hoveredSlot.stuck then
+        love.graphics.setColor(ColorWithAlpha(Palette.limeGreen, 0.8))
+        love.graphics.print('Click to refund (+' .. drinkData.price .. '$)', x + 16, ty)
+      elseif GameData.money >= drinkData.price then
+        love.graphics.print('Click to jam (' .. drinkData.price .. '$)', x + 16, ty)
+      else
+        love.graphics.setColor(ColorWithAlpha(Palette.white, 0.8))
+        love.graphics.print('Not enough money! (' .. drinkData.price .. '$)', x + 16, ty)
+      end
+    elseif GameData.phase == Phase.SELECT_DRINK then
+      love.graphics.print('Click to drop', x + 16, ty)
     end
     love.graphics.setColor(Palette.white)
     ty = ty + 32
@@ -365,9 +372,14 @@ local function drawUI()
 
   if GameData.phase == Phase.SIMULATION and GameData.mainDrink ~= nil then
     GameData.resources:setDefaultFont('outfit_medium')
+    if GameData.mainDrink.fuelLeft <= 0 then
+      love.graphics.setColor(Palette.brightRed)
+    else
+      love.graphics.setColor(Palette.white)
+    end
     love.graphics.print('Fuel Left', 32, 500)
     GameData.resources:setDefaultFont('outfit_title_bold')
-    love.graphics.print(math.floor(GameData.mainDrink.fuelLeft) .. '%', 32, 548)
+    love.graphics.print(math.floor(math.max(GameData.mainDrink.fuelLeft, 0)) .. '%', 32, 548)
   end
 
   drawCombos(32, 200)
@@ -438,7 +450,11 @@ function GameScene:mousepressed(x, y, button)
     GameData.resources:stopMusic('ingame')
     if GameData.score > SCORE_OBJECTIVES[GameData.level] then
       GameData.level = GameData.level + 1
-      self:restart()
+      if GameData.level >= 6 then
+        ChangeScene(Screens.gameEnd)
+      else
+        self:restart()
+      end
     else
       self:restart()
       -- local font = GameData.resources:setDefaultFont('outfit_title_bold')
@@ -529,7 +545,7 @@ end
 function GameScene:restart()
   GameData.phase = Phase.BUY
   GameData.score = 0
-  GameData.money = 25 + GameData.level * 5
+  GameData.money = 20 + GameData.level * 10
   GameData.drinks = {}
   GameData.slots = {}
   GameData.phase = Phase.BUY

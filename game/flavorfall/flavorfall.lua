@@ -29,7 +29,7 @@ GameData = {
   slots = {},
   drinks = {},
   phase = Phase.SELECT_DRINK,
-  level = 1,
+  level = 6,
   combos = {
     default = {
       label = 'Default',
@@ -74,6 +74,7 @@ local BACKGROUND_COLORS = {
   Palette.brightOrange,
   Palette.hotPinkBright,
   Palette.dustyRose,
+  Palette.darkPurple,
 }
 
 SCORE_OBJECTIVES = {
@@ -130,7 +131,7 @@ MachineCanvas = love.graphics.newCanvas()
 function LoadGame()
   GameData.resources = ResourceManager.new():loadAll()
   GameData.resources:setDefaultFont('outfit_medium')
-  ChangeScene(Screens.game)
+  ChangeScene(Screens.menu)
 end
 
 local squareBg = { x = 0, y = 0 }

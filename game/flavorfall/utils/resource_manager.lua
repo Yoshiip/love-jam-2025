@@ -44,6 +44,7 @@ local RESOURCE_PATHS = {
     coin = 'flavorfall/sfx/coin.mp3',
     impact = 'flavorfall/sfx/impact.wav',
     impact_metal = 'flavorfall/sfx/impact_metal.mp3',
+    smoothie = 'flavorfall/sfx/smoothie.wav',
   },
   fonts = {
     outfit_title_bold = {

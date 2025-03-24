@@ -72,7 +72,7 @@ end
 function Slot:drawLabel()
   local x, y = self.position.x, self.position.y
   if #self.drinks == 0 then
-
+    love.graphics.setColor(ColorWithAlpha(Palette.brightRed, 0.5))
   else
     love.graphics.setColor(Palette.paleMint)
   end
@@ -96,11 +96,15 @@ function Slot:isHovered()
 end
 
 function Slot:exploded()
-  self.drinks[1].stuck = false
-  self.drinks[1].flying = true
-  self.drinks[1].velocity.y = -20
-  self.drinks[1].velocity.x = love.math.random(-10, 10)
-  self.drinks[1].enabled = true
+  if #self.drinks > 0 then
+    local drink = self.drinks[1]
+    drink.stuck = false
+    drink.flying = true
+    drink.velocity.y = love.math.random(-2, -4)
+    drink.velocity.x = love.math.random(-4, 4)
+    drink.enabled = true
+    self:detached(drink)
+  end
 end
 
 function Slot:startStuck()

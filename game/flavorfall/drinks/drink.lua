@@ -77,13 +77,17 @@ function Drink:detach()
     self.stuck = false
     self.flying = true
   end
+  if DrinksData[self.id].type == 'smoothie' then
+    self:explode()
+  end
   self.slot:detached(self)
 end
 
-local EXPLOSION_RADIUS = 200
+local EXPLOSION_RADIUS = 300
 
 function Drink:explode()
   local cx, cy = self:center()
+  GameData.resources:playAudio('smoothie')
 
   for _, slot in ipairs(GameData.slots) do
     local sx, sy = slot:center()
@@ -93,9 +97,9 @@ function Drink:explode()
   end
   for i = 1, 16, 1 do
     table.insert(Particles.explosion, {
-      x = cx,
-      y = cy,
-      time = 1,
+      x = cx + love.math.random(-8, 8),
+      y = cy + love.math.random(-8, 8),
+      time = 3,
       angle = love.math.random(0, 360),
       color = DrinkColorPalette[DrinksData[self.id].color]
     })
@@ -221,13 +225,13 @@ function Drink:draw()
     love.graphics.setColor(Palette.white)
   end
 
-  love.graphics.setColor(Palette.darkRed)
-  love.graphics.setLineWidth(3)
-  if self.stuck then
-    -- love.graphics.circle("fill", x + 32, y + 128, COLLISION_RADIUS)
-  else
-    love.graphics.rectangle("line", x, y + 64, 64, 128)
-  end
+  -- love.graphics.setColor(Palette.darkRed)
+  -- love.graphics.setLineWidth(3)
+  -- if self.stuck then
+  --   -- love.graphics.circle("fill", x + 32, y + 128, COLLISION_RADIUS)
+  -- else
+  --   love.graphics.rectangle("line", x, y + 64, 64, 128)
+  -- end
   love.graphics.setColor(Palette.white)
 end
 

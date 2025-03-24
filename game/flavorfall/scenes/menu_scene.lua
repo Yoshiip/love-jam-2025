@@ -14,7 +14,7 @@ local startButton
 
 
 function MenuScene:start()
-  startButton = Button.new(560, 64, 'Play', function()
+  startButton = Button.new(640, 400, 'Play', function()
     ChangeScene(Screens.game)
   end)
 end

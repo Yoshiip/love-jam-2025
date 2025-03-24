@@ -15,6 +15,7 @@ end
 function EndScene:draw()
   local font = GameData.resources:setDefaultFont('outfit_title_bold')
   if font then
+    love.graphics.setColor(Palette.white)
     CenteredText('Congratulations!', -1, -1, font, 0, 0)
   end
 end
